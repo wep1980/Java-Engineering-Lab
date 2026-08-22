@@ -1,5 +1,7 @@
 # Java Engineering Lab
 
+Repositório: https://github.com/wep1980/Java-Engineering-Lab
+
 > Um laboratório interativo de Engenharia de Software para aprender — na
 > prática, não só na teoria — os problemas mais comuns (e mais cobrados em
 > entrevistas) de aplicações Java/Spring: N+1, race conditions,

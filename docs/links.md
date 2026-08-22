@@ -5,6 +5,12 @@
 > ficam marcadas como "Não implementado" — nunca como se já estivessem
 > disponíveis.
 
+## Repositório
+
+| Recurso | URL |
+|---|---|
+| GitHub (público) | https://github.com/wep1980/Java-Engineering-Lab |
+
 ## Ambiente local (profile `core`, validado em 2026-08-22)
 
 Subindo com `docker compose --profile core up --build` (após copiar

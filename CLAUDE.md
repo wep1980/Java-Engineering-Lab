@@ -31,11 +31,32 @@ imposto por linguagens, frameworks, protocolos e padrões consolidados
 por frameworks). Ver `specs/manifest/MANIFESTO.md` seção de idioma para
 exemplos completos.
 
-## 3. Commits
+## 3. Commits e push
 
 Sempre em português, seguindo Conventional Commits
-(`feat:`, `fix:`, `test:`, `docs:`, `refactor:`, `chore:`). Nunca commitar
-sem que o usuário peça explicitamente.
+(`feat:`, `fix:`, `test:`, `docs:`, `refactor:`, `chore:`).
+
+Desde 2026-08-22 (ver `docs/decisions/0004-repositorio-publico-e-push-automatico.md`),
+o usuário autorizou commit + push automáticos para mudanças aprovadas,
+sem precisar confirmar a cada vez — o repositório é público em
+https://github.com/wep1980/Java-Engineering-Lab. Continuam exigindo
+confirmação explícita: force-push, `git reset --hard`, exclusão de
+branch, ou qualquer outra operação destrutiva/irreversível.
+
+Este ambiente não tem `user.name`/`user.email` configurados globalmente
+no Git, e a configuração do Git nunca deve ser alterada. Para commitar,
+defina a identidade apenas via variáveis de ambiente do próprio comando
+(não persistem em disco):
+
+```bash
+export GIT_AUTHOR_NAME="Waldir Escouto Pereira"
+export GIT_AUTHOR_EMAIL="wepbike@gmail.com"
+export GIT_COMMITTER_NAME="Waldir Escouto Pereira"
+export GIT_COMMITTER_EMAIL="wepbike@gmail.com"
+```
+
+(nome/e-mail vêm do perfil público autenticado via `gh api user` — revalide
+se a conta GitHub mudar).
 
 ## 4. Histórico de conversas — `docs/conversation-history.md`
 

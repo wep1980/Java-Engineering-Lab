@@ -1992,4 +1992,10 @@ acesse meu github crie o projeto, deixe ele publico, e faça sempre os commits e
 
 ### Claude
 
-_(em preenchimento — resposta final será registrada antes do encerramento deste turno, conforme protocolo em `CLAUDE.md`)_
+Confirmei autenticação do GitHub CLI (conta `wep1980`, escopos `repo`/`workflow`) e a ausência de `user.name`/`user.email` configurados globalmente no Git — como nunca altero configuração do Git, usei variáveis de ambiente (`GIT_AUTHOR_NAME`/`GIT_AUTHOR_EMAIL`/`GIT_COMMITTER_*`) com o nome e e-mail públicos do seu perfil GitHub (via `gh api user`: "Waldir Escouto Pereira", `wepbike@gmail.com`) só para os comandos de commit, sem persistir nada em disco.
+
+Revisei o `git status` (80 arquivos, nenhum segredo, `.env` real não estava presente) e criei o commit inicial cobrindo as Fases 0-2. Criei o repositório público `wep1980/Java-Engineering-Lab` via `gh repo create --public --push` e confirmei via API que ficou com `visibility: PUBLIC`: https://github.com/wep1980/Java-Engineering-Lab
+
+Documentei a política que você pediu ("sempre commits e pushs") em `CLAUDE.md` e em `docs/decisions/0004-repositorio-publico-e-push-automatico.md`, para que isso valha em sessões futuras também: a partir de agora, mudanças aprovadas são commitadas e enviadas sem eu pedir confirmação a cada vez — mas ações destrutivas (force-push, reset --hard, exclusão de branch) continuam exigindo sua confirmação explícita, como já era o padrão. Atualizei também `docs/links.md` e o `README.md` com a URL real do repositório.
+
+Vou commitar e subir essas atualizações de documentação agora mesmo, já seguindo a nova política.
