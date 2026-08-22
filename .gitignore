@@ -1,0 +1,33 @@
+# IDE
+.idea/
+.vscode/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Segredos e ambiente local — nunca versionar
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Claude Code — configuração local (não deve ser versionada)
+.claude/settings.local.json
+.claude/.jel-history-check.json
+
+# Backend (Java / Maven) — preparado para quando o código for criado
+backend/target/
+backend/**/*.class
+backend/.mvn/wrapper/maven-wrapper.jar
+
+# Frontend (Next.js / Node) — preparado para quando o código for criado
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/coverage/
+node_modules/
+
+# Logs locais
+*.log

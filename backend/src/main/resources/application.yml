@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: java-engineering-lab-backend
+
+server:
+  port: ${PORTA_BACKEND:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

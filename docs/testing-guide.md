@@ -1,0 +1,81 @@
+# Guia de Testes — Java Engineering Lab
+
+> Este guia descreve a **estratégia** de testes do projeto. Ele não contém
+> ainda endpoints, payloads ou passos de reprodução reais, porque nenhum
+> código funcional foi implementado (Fase 0 — governança e descoberta).
+> Será preenchido incrementalmente a partir da Fase 1, com pré-requisitos,
+> ordem de inicialização, endpoints, payloads, headers, cenários positivos
+> e negativos e validações reais — nunca com exemplos fictícios.
+
+## Estratégia por tipo de teste
+
+| Tipo | Quando usar | Ferramentas |
+|---|---|---|
+| Unitário | Lógica de domínio/serviço sem dependência externa real | JUnit 5, Mockito |
+| Integração | Comportamento que depende de banco, Kafka ou Redis reais | JUnit 5, Testcontainers |
+| Concorrência | Laboratórios de race condition / lost update / deadlock | JUnit 5 com execução concorrente controlada (ex.: `ExecutorService` + `CountDownLatch`, ou `Awaitility` para asserts assíncronos) |
+| End-to-end | Fluxos completos frontend → backend, quando aplicável | A definir na Fase 8 |
+
+Princípio: usar mock quando a dependência real não é necessária; usar
+Testcontainers quando o comportamento integrado precisa ser validado. Não
+usar mock para substituir uma dependência cujo comportamento real é o que
+está sendo testado (ex.: contagem de queries do laboratório de N+1 precisa
+de um PostgreSQL real).
+
+## Cobertura
+
+JaCoCo mede cobertura como indicador auxiliar, não como meta em si. Testes
+não são criados apenas para aumentar percentual.
+
+## Qualidade estática
+
+SonarQube analisa bugs, vulnerabilidades, code smells e duplicação a
+partir da Fase 1 (quando o pipeline de CI for configurado).
+
+## Validação do esqueleto (Fase 1, 2026-08-22)
+
+Sem regras de negócio ainda, a validação da Fase 1 foi de infraestrutura:
+
+1. `mvn -f backend/pom.xml test` — passou (`contextoDeveCarregar`, contexto Spring sobe).
+2. `mvn -f backend/pom.xml spring-boot:run` + `curl http://localhost:8080/actuator/health` — retornou `{"status":"UP"}`.
+3. `curl http://localhost:8080/swagger-ui/index.html` e `/v3/api-docs` — ambos retornaram `200`.
+4. `npm --prefix frontend run build` e `npm --prefix frontend run lint` — passaram sem erros.
+5. `npm --prefix frontend run dev` + acesso via navegador local — página inicial renderizou o conteúdo esperado em português.
+6. `docker compose --profile core config` — sintaxe validada, sem erros.
+7. `docker compose --profile core up --build` — os três serviços (`postgres`, `backend`, `frontend`) subiram; `postgres` reportou `healthy`; `backend` respondeu `UP` em `/actuator/health`; `frontend` respondeu `200` com o conteúdo esperado.
+
+Os profiles `messaging`, `observability` e `quality` tiveram apenas a
+sintaxe validada (`docker compose config`) — sua subida efetiva fica para
+as fases que os utilizam (ver `docs/links.md`).
+
+## Validação do catálogo de laboratórios (Fase 2, 2026-08-22)
+
+Pré-requisito: backend rodando (`mvn spring-boot:run` ou via Docker Compose).
+
+| Endpoint | Método | Cenário | Resultado esperado |
+|---|---|---|---|
+| `/api/laboratorios` | GET | Catálogo | `200`, lista com `n1-queries` (`status: PLANEJADO`) |
+| `/api/laboratorios/n1-queries` | GET | Laboratório existente | `200`, corpo com `nome`, `objetivo`, `status` |
+| `/api/laboratorios/inexistente` | GET | Laboratório inexistente | `404`, corpo `{codigo, mensagem, timestamp, caminho, correlationId}`, cabeçalho `X-Correlation-Id` |
+
+Validações executadas: os 6 testes automatizados do backend passaram
+(`mvn test`); os três cenários acima foram validados manualmente com
+`curl`, inclusive confirmando acentuação UTF-8 correta na mensagem de
+erro ("Laboratório não encontrado"); o frontend (`/laboratorios` e
+`/laboratorios/[id]`) foi validado com `npm run build`/`lint` e visualmente
+no Chrome (catálogo e detalhe do laboratório de N+1, incluindo o estado
+"ainda não disponível" para status `PLANEJADO`); e a comunicação
+frontend→backend foi validada tanto localmente (`localhost`) quanto dentro
+da rede do Docker Compose (`http://backend:8080`).
+
+## Preenchimento futuro (por fase)
+
+- **Fase 2/3**: pré-requisitos de ambiente, ordem de subida dos serviços
+  (`docker compose up` com o profile `core`), endpoints do catálogo e do
+  laboratório de N+1, payloads reais, exemplos de coleção Postman.
+- **Fase 4/5**: cenários de concorrência e de mensageria Kafka, incluindo
+  validações de idempotência e de estado no banco/Redis.
+- **Fase 6**: validações de métricas (Prometheus) e traces (OpenTelemetry).
+
+Cada seção só é escrita quando o comportamento correspondente existir de
+fato e puder ser validado por execução real — nunca antecipadamente.
