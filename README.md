@@ -7,11 +7,14 @@ Repositório: https://github.com/wep1980/Java-Engineering-Lab
 > entrevistas) de aplicações Java/Spring: N+1, race conditions,
 > mensageria duplicada, e outros.
 
-**Status atual: Fase 7 — Engineering AI Assistant.** Três laboratórios
+**Status atual: Fase 8 — Hardening concluída.** Três laboratórios
 completos, logs estruturados, métricas (Prometheus/Grafana), tracing
-distribuído (OpenTelemetry/Tempo) e um assistente de IA (Ollama, modelo
-local) com contexto real de cada laboratório, tudo validado contra
-infraestrutura real. Veja
+distribuído (OpenTelemetry/Tempo), um assistente de IA (Ollama, modelo
+local) com contexto real de cada laboratório, análise de qualidade
+estática (SonarQube) e de dependências (OWASP Dependency-Check/npm
+audit), cobertura de testes (JaCoCo) e um teste de carga real
+comparando as variantes do laboratório de N+1 sob concorrência — tudo
+validado contra infraestrutura real. Veja
 [Estado atual do projeto](#estado-atual-do-projeto).
 
 ## Por que este projeto existe
@@ -199,13 +202,29 @@ real de um laboratório, pergunta real digitada no navegador, resposta
 real do modelo referenciando os números exatos da execução — e,
 deliberadamente, a ausência do profile `ai` confirmada como não afetando
 o restante da plataforma (endpoint do assistente responde `503`; os
-demais continuam `200`). Os laboratórios futuros do backlog e a Fase 8
-(Hardening) seguem pendentes de aprovação antes de começar (ver
+demais continuam `200`). Na Fase 8 (`SPEC-JEL-007`, concluída) o
+projeto passou por hardening em seis trilhas: segurança (OWASP
+Dependency-Check e `npm audit` no CI, ambos informativos — ver
+`docs/decisions/0008-owasp-dependency-check-requer-chave-nvd.md` para
+um bug real do upstream encontrado e contornado), testes (JaCoCo
+configurado, 86-87% de cobertura real; SonarQube validado em execução
+real pela primeira vez, com 4 bugs reais encontrados — 3 corrigidos, 1
+suprimido por ser a técnica pedagógica intencional do laboratório de
+N+1), performance (teste de carga real comparando as variantes do
+laboratório de N+1 sob concorrência — a versão corrigida sustentou de
+2,9× a 6,1× mais throughput), UX (página 404 em português, título por
+página de laboratório) e documentação final (`LICENSE` MIT,
+`CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`). Os laboratórios futuros do
+backlog seguem pendentes de aprovação antes de começar (ver
 `docs/roadmap.md`).
+
+## Licença
+
+[MIT](LICENSE).
 
 ## Como contribuir
 
-O projeto ainda não está aberto a contribuições externas formalmente —
-`CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` e `LICENSE` estão previstos para
-uma fase futura (ver seção "Open Source" do manifesto original registrado
-em `docs/conversation-history.md`).
+Ver [`CONTRIBUTING.md`](CONTRIBUTING.md) para o processo (Spec-Driven
+Development para mudanças relevantes, correções pontuais direto em PR) e
+[`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) para as diretrizes de
+convivência.

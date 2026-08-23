@@ -204,6 +204,26 @@ Validações executadas:
   refatoração que eleva `ultimoResultado` para os três componentes de
   conteúdo de laboratório.
 
+## Validação do Hardening (Fase 8, 2026-08-23)
+
+Pré-requisitos variam por trilha — ver `SPEC-JEL-007-hardening.md` para
+o detalhamento completo de cada uma. Resumo do que foi validado com
+infraestrutura/ferramentas reais (não simulado):
+
+| Trilha | Como foi validado | Resultado real |
+|---|---|---|
+| Cobertura (JaCoCo) | `mvn -B verify` no backend | 86-87,5% de instruções, relatório em `target/site/jacoco/` |
+| Qualidade estática (SonarQube) | `docker compose --profile quality up` + `mvn ...:sonar-maven-plugin:sonar` | 4 bugs reais encontrados e 3 corrigidos (1 suprimido, pedagógico); 0 vulnerabilidades; 0 security hotspots |
+| Dependências (OWASP Dependency-Check) | `mvn org.owasp:dependency-check-maven:13.0.0:check -DnvdApiKey=...` no CI | Exigiu chave de API da NVD — bug real do upstream sem ela, ver ADR-0008 |
+| Dependências (npm audit) | `npm audit --omit=dev` no frontend | 0 vulnerabilidades |
+| Performance | `docker run williamyeh/hey` contra o backend real, comparando N+1 problemático vs. JOIN FETCH | Ver tabela completa em `SPEC-JEL-007`, seção "Evidências de conclusão" — 2,9× a 6,1× mais throughput na variante corrigida |
+| UX | `npm run build` + acesso real via `curl` a `/laboratorios/n1-queries` e a uma rota inexistente | Título dinâmico por laboratório confirmado (`<title>N+1 Queries — Java Engineering Lab</title>`); página 404 em português confirmada com status HTTP 404 real |
+| Regressão | `docker compose --profile core up` ao final de todas as correções | Backend (`/actuator/health` → `UP`, `/api/laboratorios` → `200`) e frontend (`/laboratorios` → `200`) sem regressão |
+
+Detalhamento completo de cada achado (incluindo os 4 bugs reais do
+SonarQube, com arquivo/linha/regra) está em
+`specs/architecture/SPEC-JEL-007-hardening.md`.
+
 ## Preenchimento futuro (por fase)
 
 - **Fase 2/3**: pré-requisitos de ambiente, ordem de subida dos serviços

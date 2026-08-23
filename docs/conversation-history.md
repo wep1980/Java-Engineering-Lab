@@ -2174,3 +2174,115 @@ Implementei a Fase 7 (Engineering AI Assistant, `SPEC-JEL-006`) por completo, us
 Validação real, não apenas testes automatizados: os 24 testes do backend passam (incluindo os 3 novos de `AssistenteIAControllerTest`); `npm run build`/`lint` do frontend sem erros; o modelo `llama3.2:3b` confirmado baixado via `curl http://localhost:11434/api/tags`; uma pergunta real (via `curl` direto no backend, via proxy do frontend, e via clique real no navegador Chrome) com o resultado real de uma execução do laboratório N+1 (51 queries/50 pedidos) como contexto recebeu do Ollama uma resposta real explicando corretamente "1 + 50 = 51" com os números exatos da tela — não uma resposta fabricada. Validei também a degradação graciosa: com os containers do Ollama parados, o endpoint do assistente responde `503` (formato padrão de erro) enquanto o restante da plataforma (testado com uma execução do N+1) continua respondendo `200` normalmente, confirmando que o profile `ai` é opcional e isolado. Ambiente encerrado de forma limpa ao final (`docker compose down`).
 
 Atualizei a documentação: `SPEC-JEL-006` com critérios de aceite marcados e uma seção "Evidências de conclusão" detalhando cada validação real; `docs/roadmap.md` (Fase 7 concluída); `docs/links.md` (URLs do profile `ai`); `docs/testing-guide.md` (seção de validação da Fase 7); e `README.md` (status atual, instruções de execução com o profile `ai`, e o parágrafo de estado do projeto). Próximo passo natural: Fase 8 (Hardening), que ainda depende de aprovação explícita do usuário para começar.
+
+---
+
+## Interação 2026-08-23 09:11:22
+
+### Usuário
+
+avança para a Fase 8
+
+### Claude
+
+Antes de implementar, escrevi `specs/architecture/SPEC-JEL-007-hardening.md` (PROPOSTA), listando apenas gaps reais verificados no repositório — nada especulativo: sem plugin de cobertura (JaCoCo) no `pom.xml`, profile `quality` (SonarQube) nunca validado em execução, nenhuma ferramenta de CVE em dependências integrada, CI sem relatório de cobertura/segurança, `LICENSE`/`CONTRIBUTING.md`/`CODE_OF_CONDUCT.md` inexistentes, página 404 padrão do Next.js em inglês, e nenhum teste de carga real feito em nenhuma fase anterior. Organizei em seis trilhas (segurança, testes, performance, UX, documentação final, CI/CD) e perguntei ao usuário, via `AskUserQuestion`: (1) se aprovava o escopo completo da SPEC — respondeu "Aprovo o escopo completo"; (2) qual licença usar (decisão que só ele podia tomar) — escolheu MIT.
+
+Com a aprovação, implementei as seis trilhas:
+
+**T1 — Segurança**: ao tentar rodar `org.owasp:dependency-check-maven` (13.0.0) sem chave de API da NVD, a análise falhou com um bug real e não corrigido no upstream da ferramenta (issues `#8298`/`#8715`, confirmado por pesquisa) — versões atuais do plugin simplesmente não funcionam sem chave, apesar de documentado como suportado. Documentei em `docs/decisions/0008-owasp-dependency-check-requer-chave-nvd.md`. `npm audit --omit=dev` no frontend: 0 vulnerabilidades.
+
+**T2 — Testes**: configurei JaCoCo no `backend/pom.xml` (86-87,5% de cobertura real). Subi `docker compose --profile quality up` e validei o SonarQube em execução real pela primeira vez — achados reais: 4 bugs, 0 vulnerabilidades, 24 code smells. Corrigi 3 dos 4 bugs reais: `ExecutorService` não fechado de forma garantida em `ExecucaoRaceConditionService` (convertido para try-with-resources, Java 21 suporta `AutoCloseable` desde Java 19); campo `volatile CountDownLatch` não thread-safe nos dois consumidores Kafka (convertidos para `AtomicReference`). O quarto bug (`ExecucaoN1Service.java`, "retorno de `.size()` não usado") é a própria técnica pedagógica do laboratório de N+1 — não corrigi, documentei com `// NOSONAR` e o motivo. Revalidei: 0 bugs após as correções.
+
+**T3 — Performance**: testei carga real (`docker run williamyeh/hey`, sem instalar nada no host) comparando as variantes problemática e JOIN FETCH do laboratório N+1 sob concorrência real — a versão corrigida sustentou de 2,9× a 6,1× mais throughput em duas rodadas com amostras diferentes (50 e 200 requisições).
+
+**T4 — UX**: criei `not-found.tsx` em português, adicionei `generateMetadata` para título dinâmico por laboratório, e corrigi um gap adicional que encontrei no caminho — a página inicial listava fases do roadmap desatualizadas (Fase 3 em diante como "planejada"). Adicionei `aria-label` no único `<input>` sem rótulo do frontend.
+
+**T5 — Documentação final**: criei `LICENSE` (MIT), `CONTRIBUTING.md` e `CODE_OF_CONDUCT.md` (baseado no Contributor Covenant, resumido), atualizei o README.
+
+**T6 — CI/CD**: atualizei `.github/workflows/backend-ci.yml` (publica relatórios de cobertura e Dependency-Check como artifacts) e `frontend-ci.yml` (`npm audit` informativo).
+
+O Dependency-Check exigiu a chave da NVD, que o usuário já tinha de outro projeto seu (`wepdev-financas`) — essa parte da interação está detalhada nas entradas seguintes deste histórico. Revalidei tudo ao final: `mvn -B verify` (24/24 testes), `npm run build`/`lint` sem erros, `docker compose --profile core up` sem regressão, título dinâmico e página 404 confirmados via `curl` real.
+
+---
+
+## Interação 2026-08-23 09:35:00 (aproximado)
+
+### Usuário
+
+eu ja tenho uma chave dessa, nos utilizamos em outro projeto. voce consegue identificar?
+
+### Claude
+
+Tentei buscar por referências a `NVD_API_KEY`/`nvdApiKey` em todos os projetos do usuário em `github-pessoal/` de uma vez, mas o guard de permissão do Bash bloqueou a ação — corretamente, já que varrer todos os repositórios privados do usuário atrás de segredos não deveria ser automático. Pedi ao usuário para indicar qual projeto específico tem a chave, em vez de tentar contornar o bloqueio.
+
+---
+
+## Interação 2026-08-23 09:36:00 (aproximado)
+
+### Usuário
+
+é do wepdev-financas
+
+### Claude
+
+Busquei (com `Grep`, escopado só a esse repositório) por `NVD_API_KEY`/`nvdApiKey` em `wepdev-financas` e encontrei: o valor real nunca está em código, é um secret do GitHub (`NVD_API_KEY`) referenciado no `.github/workflows/ci.yml` como `${{ secrets.NVD_API_KEY }}`, junto com um step de cache da base de dados do Dependency-Check. Expliquei ao usuário que, por design do GitHub, eu não tenho como ler o valor de um secret já cadastrado — nem ele, depois de salvo — e perguntei, via `AskUserQuestion`, como ele preferia cadastrar o mesmo secret aqui sem o valor passar pelo chat: ele mesmo rodando `gh secret set` no terminal, ou pela interface web do GitHub. Escolheu a interface web.
+
+---
+
+## Interação 2026-08-23 09:37:00 (aproximado)
+
+### Usuário
+
+me responda sempre em portugues. torne isso uma regra
+
+### Claude
+
+Salvei uma memória de feedback permanente (`feedback_responder_em_portugues.md`) registrando que toda resposta conversacional deve ser em português — não só código/commits/documentação, que já era regra do `CLAUDE.md` do projeto. Confirmei a regra salva e seguí trabalhando nas demais trilhas da Fase 8 (T2-T6) enquanto o usuário cadastrava o secret.
+
+---
+
+## Interação 2026-08-23 10:15:00 (aproximado)
+
+### Usuário
+
+como eu faço para cadastrar?
+
+### Claude
+
+Dei o passo a passo pela interface do GitHub (Settings → Secrets and variables → Actions → New repository secret, em `github.com/wep1980/Java-Engineering-Lab/settings/secrets/actions`, nome `NVD_API_KEY`, valor a mesma chave do `wepdev-financas`).
+
+---
+
+## Interação 2026-08-23 10:16:00 (aproximado)
+
+### Usuário
+
+faça isso por mim
+
+### Claude
+
+Expliquei que não é tecnicamente possível eu fazer isso sozinho: o GitHub nunca expõe o valor de um secret já salvo, nem para o dono, nem por API — não tenho como "puxar" o valor do `wepdev-financas`. Tentei verificar se havia um arquivo `.env` local não versionado no `wepdev-financas` com o valor real, mas o guard de permissão bloqueou de novo (buscar arquivos que podem conter segredos fora do repositório atual não deve ser automático). Perguntei ao usuário, via `AskUserQuestion`, como preferia me passar o valor com segurança: indicar o caminho de um `.env` específico para eu ler, rodar o comando `gh secret set` ele mesmo, ou gerar uma chave nova. Escolheu "autorize eu ler um arquivo .env específico" e pedi o caminho exato.
+
+---
+
+## Interação 2026-08-23 10:18:00 (aproximado)
+
+### Usuário
+
+ok, me diga passo a passo o que eu preciso fazer?
+
+### Claude
+
+Sem receber um caminho de arquivo, dei o passo a passo alternativo para ele mesmo cadastrar via terminal: `!gh secret set NVD_API_KEY --repo wep1980/Java-Engineering-Lab`, colar o valor quando solicitado (entrada não aparece na tela, é normal), confirmar com Ctrl+D — nada disso passa pela nossa conversa.
+
+---
+
+## Interação 2026-08-23 10:20:00 (aproximado)
+
+### Usuário
+
+veja se agora deu certo
+
+### Claude
+
+Confirmei via `gh secret list --repo wep1980/Java-Engineering-Lab`: o secret `NVD_API_KEY` está cadastrado (criado em 2026-08-23T13:17:02Z). Revalidei tudo mais uma vez localmente (`mvn -B verify` com 24/24 testes, `npm run build`/`lint` sem erros, `docker compose --profile core up` confirmando backend/frontend/página 404/título dinâmico funcionando sem regressão, ambiente encerrado de forma limpa em seguida). Atualizei `docs/roadmap.md` (Fase 8 concluída), `docs/links.md` (URLs do profile `quality`) e `docs/testing-guide.md` (seção de validação da Fase 8) e o `README.md` (status atual e parágrafo de estado do projeto). Identifiquei, ao revisar este próprio histórico, que várias mensagens do usuário neste turno não tinham sido registradas como o protocolo exige — reconstruí as entradas correspondentes acima antes de prosseguir para o commit final.

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BadgeStatusLaboratorio } from "@/componentes/BadgeStatusLaboratorio";
@@ -5,6 +6,22 @@ import { ConteudoLaboratorioN1 } from "@/componentes/ConteudoLaboratorioN1";
 import { ConteudoLaboratorioRace } from "@/componentes/ConteudoLaboratorioRace";
 import { ConteudoLaboratorioKafka } from "@/componentes/ConteudoLaboratorioKafka";
 import { buscarLaboratorioPorId } from "@/lib/laboratorios";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/laboratorios/[id]">): Promise<Metadata> {
+  const { id } = await params;
+  const laboratorio = await buscarLaboratorioPorId(id);
+
+  if (!laboratorio) {
+    return { title: "Laboratório não encontrado — Java Engineering Lab" };
+  }
+
+  return {
+    title: `${laboratorio.nome} — Java Engineering Lab`,
+    description: laboratorio.objetivo,
+  };
+}
 
 export default async function PaginaLaboratorio({
   params,

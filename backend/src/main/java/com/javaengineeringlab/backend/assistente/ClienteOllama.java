@@ -7,8 +7,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
-import java.util.Map;
-
 /**
  * Implementação concreta de AssistenteIA usando Ollama (modelo local) —
  * ver SPEC-JEL-006-engineering-ai-assistant.md. Chama

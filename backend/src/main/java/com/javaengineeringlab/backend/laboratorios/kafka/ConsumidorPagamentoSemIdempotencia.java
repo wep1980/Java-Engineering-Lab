@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Variante problemática: credita a carteira em toda mensagem recebida,
@@ -19,7 +20,7 @@ public class ConsumidorPagamentoSemIdempotencia {
 
     private final CreditoSemIdempotenciaOperacao creditoOperacao;
     private final AtomicInteger contadorMensagensRecebidas = new AtomicInteger();
-    private volatile CountDownLatch latch = new CountDownLatch(0);
+    private final AtomicReference<CountDownLatch> latchRef = new AtomicReference<>(new CountDownLatch(0));
 
     public ConsumidorPagamentoSemIdempotencia(CreditoSemIdempotenciaOperacao creditoOperacao) {
         this.creditoOperacao = creditoOperacao;
@@ -27,11 +28,11 @@ public class ConsumidorPagamentoSemIdempotencia {
 
     public void prepararParaReceber(int quantidadeEsperada) {
         contadorMensagensRecebidas.set(0);
-        latch = new CountDownLatch(quantidadeEsperada);
+        latchRef.set(new CountDownLatch(quantidadeEsperada));
     }
 
     public boolean aguardarRecebimento(long timeoutSegundos) throws InterruptedException {
-        return latch.await(timeoutSegundos, TimeUnit.SECONDS);
+        return latchRef.get().await(timeoutSegundos, TimeUnit.SECONDS);
     }
 
     public int getContadorMensagensRecebidas() {
@@ -45,6 +46,6 @@ public class ConsumidorPagamentoSemIdempotencia {
         // mensagem como recebida aqui é seguro (ver CreditoSemIdempotenciaOperacao).
         creditoOperacao.creditar(evento.carteiraId(), evento.valor());
         contadorMensagensRecebidas.incrementAndGet();
-        latch.countDown();
+        latchRef.get().countDown();
     }
 }

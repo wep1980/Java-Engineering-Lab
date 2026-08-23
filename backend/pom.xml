@@ -126,6 +126,44 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
       </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.15</version>
+        <executions>
+          <execution>
+            <id>preparar-agente</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>gerar-relatorio</id>
+            <phase>test</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!--
+        Não vinculado ao ciclo de vida padrão de propósito — chamar
+        dependência de rede (NVD) a cada `mvn verify` local deixaria o
+        build lento. Roda como step explícito no CI
+        (`mvn org.owasp:dependency-check-maven:check`), informativo
+        (ver ADR sobre a política de segurança do CI).
+      -->
+      <plugin>
+        <groupId>org.owasp</groupId>
+        <artifactId>dependency-check-maven</artifactId>
+        <version>13.0.0</version>
+        <configuration>
+          <formats>
+            <format>HTML</format>
+          </formats>
+          <failBuildOnCVSS>11</failBuildOnCVSS>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 </project>

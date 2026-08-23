@@ -27,3 +27,35 @@ jobs:
       - name: Build e testes
         working-directory: backend
         run: mvn -B verify
+
+      # jacoco:report já roda dentro de "mvn verify" (bind na fase test,
+      # ver pom.xml) — aqui só publica o HTML gerado como artefato do run.
+      - name: Publicar relatório de cobertura (JaCoCo)
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: backend/target/site/jacoco/
+          retention-days: 14
+
+      # Requer o secret NVD_API_KEY no repositório — sem ele, o NVD
+      # rejeita a sincronização com "Invalid API Key" (bug conhecido nas
+      # versões atuais do plugin sem chave, ver ADR-0008). Cache evita
+      # rebaixar a base de dados a cada execução.
+      - name: Cache da base de dados do OWASP Dependency-Check
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/owasp/dependency-check-data
+          key: dependency-check-data-${{ github.run_id }}
+          restore-keys: dependency-check-data-
+
+      - name: Scan de vulnerabilidade (OWASP Dependency-Check)
+        working-directory: backend
+        run: mvn -B org.owasp:dependency-check-maven:13.0.0:check -DnvdApiKey=${{ secrets.NVD_API_KEY }}
+
+      - name: Publicar relatório do Dependency-Check
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: backend/target/dependency-check-report.html
+          retention-days: 14

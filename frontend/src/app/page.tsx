@@ -3,8 +3,13 @@ import Link from "next/link";
 const fases = [
   { nome: "Governança e Descoberta", status: "Concluída" },
   { nome: "Bootstrap de Código", status: "Concluída" },
-  { nome: "Plataforma Base de Laboratórios", status: "Em andamento" },
-  { nome: "Laboratório de N+1 Queries", status: "Planejada" },
+  { nome: "Plataforma Base de Laboratórios", status: "Concluída" },
+  { nome: "Laboratório de N+1 Queries", status: "Concluída" },
+  { nome: "Laboratório de Race Condition", status: "Concluída" },
+  { nome: "Laboratório de Kafka / Idempotência", status: "Concluída" },
+  { nome: "Observabilidade Consolidada", status: "Concluída" },
+  { nome: "Engineering AI Assistant", status: "Concluída" },
+  { nome: "Hardening", status: "Em andamento" },
 ];
 
 export default function PaginaInicial() {

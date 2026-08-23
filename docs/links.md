@@ -93,11 +93,19 @@ que uma execução do laboratório N+1 continuou respondendo `200`
 enquanto o endpoint do assistente passou a responder `503` com mensagem
 clara.
 
-## Profiles ainda não validados em execução
+## Ambiente local (profile `quality`, validado em 2026-08-23)
 
-| Serviço | Profile | Status |
+`docker compose --profile quality up`.
+
+| Serviço | URL | Observação |
 |---|---|---|
-| SonarQube | `quality` | Configuração escrita, não validada em execução — entra na Fase 8 |
+| SonarQube | http://localhost:9000 | Porta configurável via `PORTA_SONARQUBE` no `.env`. Validado — análise real do backend (`mvn ...:sonar`) processada, achados reais consultados via API (ver `SPEC-JEL-007-hardening.md`, seção "Evidências de conclusão") |
+
+Login inicial `admin`/`admin`, com troca de senha obrigatória no
+primeiro acesso (via UI ou `POST /api/users/change_password`). Um token
+de análise é gerado em **My Account → Security** (ou via
+`POST /api/user_tokens/generate`) para uso com
+`-Dsonar.token=...` no `sonar-maven-plugin`.
 
 Este arquivo será atualizado conforme cada profile for efetivamente
 validado em execução.

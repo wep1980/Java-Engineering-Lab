@@ -35,3 +35,10 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      # Informativo — não falha o build (mesma política do Dependency-
+      # Check do backend, ver ADR-0008). continue-on-error porque o
+      # comando sai com código != 0 quando encontra qualquer achado.
+      - name: Auditoria de dependências (npm audit)
+        continue-on-error: true
+        run: npm audit --audit-level=high

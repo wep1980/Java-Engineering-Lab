@@ -73,7 +73,7 @@ public class ExecucaoN1Service {
         // Acessar a coleção lazy de cada pedido, um a um, dispara uma
         // consulta adicional por pedido -- o N+1.
         for (Pedido pedido : pedidos) {
-            pedido.getItens().size();
+            pedido.getItens().size(); // NOSONAR -- retorno ignorado de propósito: só força o lazy loading, é o próprio N+1 que este laboratório demonstra
         }
         return pedidos.size();
     }

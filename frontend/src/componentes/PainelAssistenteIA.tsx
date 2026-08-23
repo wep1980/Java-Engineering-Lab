@@ -96,6 +96,7 @@ export function PainelAssistenteIA({ laboratorioId, ultimoResultado }: Props) {
       <div className="flex gap-2">
         <input
           type="text"
+          aria-label="Pergunte ao assistente"
           value={pergunta}
           onChange={(e) => setPergunta(e.target.value)}
           onKeyDown={(e) => {

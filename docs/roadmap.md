@@ -16,7 +16,7 @@
 | 5 | Laboratório Kafka / Idempotência | **Concluída** (2026-08-22) | Implementação completa de `SPEC-LAB-KAFKA-IDEMP-001` |
 | 6 | Observabilidade consolidada | **Concluída** (2026-08-23) | Logs estruturados, Prometheus/Grafana e tracing distribuído (Tempo) — `SPEC-JEL-005` |
 | 7 | Engineering AI Assistant | **Concluída** (2026-08-23) | Assistente de IA (Ollama, modelo local) com contexto real do laboratório — `SPEC-JEL-006` |
-| 8 | Hardening | Proposta | Segurança, performance, UX, documentação final, CI/CD completo |
+| 8 | Hardening | **Concluída** (2026-08-23) | Dependency-Check + npm audit no CI, JaCoCo, SonarQube validado (3 bugs reais corrigidos), teste de carga real, UX (404/títulos), LICENSE/CONTRIBUTING/CODE_OF_CONDUCT — `SPEC-JEL-007` |
 
 ## Backlog de laboratórios futuros (pós Fase 5)
 

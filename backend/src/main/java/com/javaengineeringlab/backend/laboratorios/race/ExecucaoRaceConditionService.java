@@ -133,11 +133,10 @@ public class ExecucaoRaceConditionService {
      * chamadas sequenciais.
      */
     private void dispararConcorrente(Runnable operacao) {
-        ExecutorService executor = Executors.newFixedThreadPool(QUANTIDADE_REQUISICOES_CONCORRENTES);
         CountDownLatch largada = new CountDownLatch(1);
         List<Future<?>> tarefas = new ArrayList<>();
 
-        try {
+        try (ExecutorService executor = Executors.newFixedThreadPool(QUANTIDADE_REQUISICOES_CONCORRENTES)) {
             for (int i = 0; i < QUANTIDADE_REQUISICOES_CONCORRENTES; i++) {
                 tarefas.add(executor.submit(() -> {
                     largada.await();
@@ -156,8 +155,6 @@ public class ExecucaoRaceConditionService {
             throw new IllegalStateException("Execução concorrente interrompida", e);
         } catch (ExecutionException e) {
             throw new IllegalStateException("Falha em execução concorrente", e.getCause());
-        } finally {
-            executor.shutdown();
         }
     }
 }
