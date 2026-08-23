@@ -7,10 +7,11 @@ Repositório: https://github.com/wep1980/Java-Engineering-Lab
 > entrevistas) de aplicações Java/Spring: N+1, race conditions,
 > mensageria duplicada, e outros.
 
-**Status atual: Fase 5 — Laboratório de Kafka/Idempotência concluído.**
-Três laboratórios completos e executáveis de ponta a ponta, com métricas
-reais — PostgreSQL, concorrência real (threads) e mensageria real
-(Kafka). Veja [Estado atual do projeto](#estado-atual-do-projeto).
+**Status atual: Fase 6 — Observabilidade consolidada.** Três
+laboratórios completos, mais logs estruturados, métricas (Prometheus/
+Grafana) e tracing distribuído (OpenTelemetry/Tempo), todos validados
+contra infraestrutura real. Veja
+[Estado atual do projeto](#estado-atual-do-projeto).
 
 ## Por que este projeto existe
 
@@ -77,14 +78,22 @@ precisa estar no ar:
 docker compose --profile core --profile messaging up --build
 ```
 
+Para métricas, logs estruturados e tracing distribuído, o profile
+`observability`:
+
+```bash
+docker compose --profile core --profile observability up --build
+```
+
 - Backend: http://localhost:8080 (health-check em `/actuator/health`,
   Swagger UI em `/swagger-ui/index.html`).
 - Frontend: http://localhost:3000.
 - Kafka UI (com `messaging` ativo): http://localhost:8081.
+- Grafana (com `observability` ativo): http://localhost:3300 — dashboard
+  e datasources (Prometheus, Tempo) já provisionados.
 
-Os demais profiles (`observability`, `quality`) têm a configuração
-escrita em `docker-compose.yml`, mas só entram em uso quando as fases
-correspondentes existirem (ver
+O profile `quality` tem a configuração escrita em `docker-compose.yml`,
+mas só entra em uso quando a Fase 8 existir (ver
 `specs/architecture/SPEC-JEL-004-bootstrap-de-codigo.md`).
 
 Para desenvolvimento sem Docker:
@@ -157,7 +166,16 @@ consumidor sem proteção (credita duas vezes) e um consumidor idempotente
 de integração com Testcontainers (Kafka + PostgreSQL simultâneos). Um bug
 real de sincronização foi encontrado e corrigido durante a validação
 manual — ver `docs/decisions/0006-sincronizacao-so-apos-commit-em-listeners.md`.
-Os laboratórios futuros do backlog seguem pendentes de aprovação antes de
+Na Fase 6 (`SPEC-JEL-005`, concluída) a observabilidade foi consolidada:
+logs estruturados em JSON (com `correlationId`/`traceId`/`spanId`),
+Prometheus + Grafana com dashboard provisionado automaticamente, e
+tracing distribuído real via OpenTelemetry + Grafana Tempo. A validação
+contra infraestrutura real (não só a configuração) encontrou e corrigiu
+cinco problemas reais nessa fase — incluindo uma regressão que travava o
+backend sem o profile `messaging` ativo — documentados em
+`docs/decisions/0007-fallback-de-bootstrap-servers-do-kafka.md` e na
+própria `SPEC-JEL-005`. Os laboratórios futuros do backlog e a Fase 7
+(Engineering AI Assistant) seguem pendentes de aprovação antes de
 começar (ver `docs/roadmap.md`).
 
 ## Como contribuir

@@ -5,6 +5,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +20,8 @@ import java.util.UUID;
  */
 @Component
 public class FiltroCorrelationId extends HttpFilter {
+
+    private static final Logger LOG = LoggerFactory.getLogger(FiltroCorrelationId.class);
 
     public static final String CABECALHO = "X-Correlation-Id";
     public static final String CHAVE_MDC = "correlationId";
@@ -34,6 +38,7 @@ public class FiltroCorrelationId extends HttpFilter {
         response.setHeader(CABECALHO, correlationId);
         try {
             chain.doFilter(request, response);
+            LOG.info("Requisição concluída: {} {} -> {}", request.getMethod(), request.getRequestURI(), response.getStatus());
         } finally {
             MDC.remove(CHAVE_MDC);
         }

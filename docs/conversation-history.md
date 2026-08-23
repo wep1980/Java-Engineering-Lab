@@ -2096,6 +2096,39 @@ Documentação atualizada: `SPEC-LAB-KAFKA-IDEMP-001` (evidências completas, in
 
 Nota: esta interação foi interrompida por um reset de limite de uso da Claude no meio da execução (mensagem de sistema, não do usuário) e retomada exatamente de onde parou, sem repetir trabalho já concluído.
 
-Vou commitar e subir tudo agora.
+Commitei e subi tudo (commit `681c018`) e confirmei que os dois workflows de CI passaram no GitHub Actions, incluindo os testes com Kafka real no runner do GitHub.
 
 Com isso, os três primeiros laboratórios do roadmap original (N+1, Race Condition, Kafka/Idempotência) estão completos, testados e validados de ponta a ponta.
+
+---
+
+## Interação 2026-08-23 08:04:04
+
+### Usuário
+
+avança para a Fase 6
+
+### Claude
+
+Criei `SPEC-JEL-005-observabilidade-consolidada.md` antes do código. Esta fase não é um laboratório novo, é a consolidação dos três pilares de observabilidade da stack: logs estruturados, métricas e tracing distribuído.
+
+**Logs estruturados**: usei o suporte nativo do Spring Boot (`logging.structured.format.console: ecs`) — nenhuma dependência nova. Descobri que nenhum log da aplicação de fato acontecia durante uma requisição (só logs internos do framework), então o `correlationId` nunca apareceria nos logs apesar de estar no MDC — adicionei um log real de conclusão de requisição em `FiltroCorrelationId`.
+
+**Métricas**: validei o profile `observability` pela primeira vez em execução (nunca tinha subido antes). Prometheus coletando métricas reais do backend, confirmado via API.
+
+**Tracing distribuído**: Micrometer Tracing + ponte OpenTelemetry + exportador OTLP + novo serviço Tempo no `docker-compose.yml`. Grafana provisionado automaticamente com os dois datasources (Prometheus, Tempo) e um dashboard com 5 painéis reais — tudo via arquivos de provisionamento, sem nenhum clique manual.
+
+**Cinco problemas reais encontrados e corrigidos durante a validação** (nenhum seria detectável só lendo código/config):
+1. **Regressão que travava o backend inteiro** sem o profile `messaging` ativo — o hostname `kafka` não resolvia via DNS, e o cliente Kafka falha de forma síncrona nesse caso específico (diferente de "conexão recusada", que é tolerado). A premissa documentada na Fase 5 nunca tinha sido validada nessa combinação de profiles. Corrigi adicionando `localhost:9092` como fallback resolvível — registrado em ADR-0007.
+2. O receptor OTLP do Tempo escutava só em `127.0.0.1`, inacessível para outros containers — corrigido com `endpoint: 0.0.0.0:...` explícito.
+3. A propriedade `management.otlp.tracing.endpoint` (conhecimento prévio) não existe de fato no Spring Boot 4.1.1 — a correta é `management.opentelemetry.tracing.export.otlp.endpoint`, e precisei adicionar `spring-boot-micrometer-tracing-opentelemetry` explicitamente (mesmo padrão de modularização já visto antes).
+4. O dashboard do Grafana carregava com todos os painéis vazios, sem nenhum erro visível — referenciei o datasource pelo nome ("Prometheus") em vez do UID no JSON. Só a inspeção visual real no navegador revelou isso; a API por si só não indicava problema.
+5. Um volume antigo do Grafana com estado de provisionamento incompatível causou um crash ao corrigir o problema acima — removido e recriado (dado descartável, não é dado da aplicação).
+
+**Validação real**: 21/21 testes continuam passando. `curl` confirmou Prometheus com o target `UP`. Um `traceId` de uma requisição real foi encontrado no Tempo via busca direta por ID, e confirmado acessível pelo proxy do datasource no Grafana. **Testei no Chrome de verdade**: logei no Grafana, abri o dashboard, e vi os 5 painéis com dados reais — incluindo o tráfego de todos os laboratórios que testei ao longo desta sessão inteira. Reconfirmei que `--profile core` sozinho continua funcionando sem nenhuma regressão, após a correção do item 1.
+
+Documentação atualizada: `SPEC-JEL-005` (evidências completas + os 5 percalços), novos ADR-0007, `README.md`, `docs/roadmap.md`, `docs/links.md`, `docs/testing-guide.md`, `docs/observability.md` (deixou de ser só proposta, agora descreve o que está implementado).
+
+Ambiente derrubado ao final, volumes de teste removidos. Vou commitar e subir agora.
+
+Com isso, as Fases 0-6 do roadmap original estão completas: governança, bootstrap, plataforma base, três laboratórios funcionais (N+1, Race Condition, Kafka/Idempotência) e observabilidade consolidada — tudo validado contra infraestrutura real, não apenas testado em isolamento.

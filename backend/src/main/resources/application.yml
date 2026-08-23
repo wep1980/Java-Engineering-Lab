@@ -35,6 +35,11 @@ spring:
 server:
   port: ${PORTA_BACKEND:8080}
 
+logging:
+  structured:
+    format:
+      console: ecs
+
 management:
   endpoints:
     web:
@@ -43,6 +48,14 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+  tracing:
+    sampling:
+      probability: 1.0
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTLP_TRACING_ENDPOINT:http://localhost:4318/v1/traces}
 
 springdoc:
   api-docs:

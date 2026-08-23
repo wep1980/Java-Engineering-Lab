@@ -140,7 +140,7 @@ que registra o padrão para todo consumidor assíncrono futuro do projeto.
 
 | Risco | Impacto | Mitigação |
 |---|---|---|
-| Backend sobe sem o profile `messaging` ativo | Endpoint deste laboratório fica indisponível | `LaboratorioIndisponivelException` (503) com mensagem clara, em vez de erro genérico; documentado em `docs/links.md` que este laboratório exige `--profile core --profile messaging` (ou `full`) |
+| Backend sobe sem o profile `messaging` ativo | Endpoint deste laboratório fica indisponível | `LaboratorioIndisponivelException` (503) com mensagem clara, em vez de erro genérico; documentado em `docs/links.md` que este laboratório exige `--profile core --profile messaging` (ou `full`). **Nota (Fase 6)**: a premissa de que "o backend sobe normalmente sem messaging" só passou a ser verdadeira depois de uma correção real de configuração — ver `docs/decisions/0007-fallback-de-bootstrap-servers-do-kafka.md`; antes dela, o backend travava na inicialização nessa combinação de profiles. |
 | Timing de subscrição do consumidor vs. publicação logo após o startup do Kafka | Mensagem publicada antes do consumidor se inscrever poderia parecer "perdida" | `auto-offset-reset: earliest` — consumidor novo sempre começa do início do tópico, não perde mensagens publicadas antes da primeira subscrição |
 | Confundir "duas entregas" com "dois problemas" | Conclusão didática incorreta | Conteúdo do laboratório é explícito: a entrega dupla é comportamento normal do Kafka; o problema é o efeito de negócio não idempotente |
 

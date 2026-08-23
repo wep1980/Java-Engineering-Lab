@@ -147,6 +147,26 @@ Validações executadas:
   card de saldo final fica vermelho (sem idempotência) ou verde
   (idempotente). Sem erros no console.
 
+## Validação da observabilidade consolidada (Fase 6, 2026-08-23)
+
+Pré-requisito: `docker compose --profile core --profile observability up`.
+
+| O quê | Como validar | Resultado esperado |
+|---|---|---|
+| Logs estruturados | `docker logs <container>` | Cada linha é um JSON (ECS); linhas geradas durante uma requisição incluem `correlationId`, `traceId`, `spanId` |
+| Prometheus | `curl .../api/v1/targets` | `java-engineering-lab-backend` com `health: up` |
+| Grafana — datasources | `curl -u admin:senha .../api/datasources` | Prometheus e Tempo listados |
+| Grafana — dashboard | Abrir `http://localhost:3300/d/jel-backend-overview` no navegador | 5 painéis com dados reais (não vazios) |
+| Tracing | `curl .../api/traces/{traceId}` no Tempo, usando um `traceId` de um log real | `200` com o span completo |
+| Regressão | `docker compose --profile core up` (sem observability nem messaging) | Backend sobe e responde normalmente |
+
+Validações executadas: todos os itens acima confirmados com dados reais
+(não simulados) nesta sessão. Cinco problemas reais foram encontrados e
+corrigidos durante essa validação — detalhados em
+`specs/architecture/SPEC-JEL-005-observabilidade-consolidada.md`, seção
+"Percalços técnicos reais". Nenhum deles seria detectável só lendo o
+código ou a configuração.
+
 ## Preenchimento futuro (por fase)
 
 - **Fase 2/3**: pré-requisitos de ambiente, ordem de subida dos serviços

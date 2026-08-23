@@ -29,10 +29,18 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-java_engineering_lab}
       POSTGRES_USER: ${POSTGRES_USER:-jel}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
-      # Só existe efetivamente se o profile "messaging" também estiver no
-      # ar; caso contrário o backend sobe normalmente e apenas fica
-      # tentando reconectar em background (ver docs/links.md).
-      KAFKA_BOOTSTRAP_SERVERS: kafka:19092
+      # "kafka" só resolve via DNS do Docker se o profile "messaging"
+      # também estiver no ar — sem isso, o Kafka client falha de forma
+      # SÍNCRONA (não é uma falha de conexão tolerada em background) se
+      # NENHUM endereço resolver, derrubando o container inteiro. O
+      # "localhost:9092" extra sempre resolve (loopback), garantindo que
+      # ao menos um endereço resolva; a tentativa de conexão em si falha
+      # graciosamente em background como esperado. Ver
+      # docs/decisions/0007-fallback-de-bootstrap-servers-do-kafka.md.
+      KAFKA_BOOTSTRAP_SERVERS: kafka:19092,localhost:9092
+      # Idem para o profile "observability" — sem Tempo no ar, a
+      # exportação de traces só falha silenciosamente em background.
+      OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
     ports:
       - "${PORTA_BACKEND:-8080}:8080"
     depends_on:
@@ -96,6 +104,20 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_SENHA_ADMIN:?defina GRAFANA_SENHA_ADMIN no .env}
     volumes:
       - grafana-dados:/var/lib/grafana
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+      - tempo
+
+  tempo:
+    image: grafana/tempo:latest
+    profiles: ["observability", "full"]
+    command: ["-config.file=/etc/tempo.yaml"]
+    ports:
+      - "${PORTA_TEMPO:-3200}:3200"
+    volumes:
+      - ./infra/tempo/tempo.yaml:/etc/tempo.yaml:ro
+      - tempo-dados:/var/tempo
 
   # ---------- profile: quality ----------
   sonarqube:
@@ -110,5 +132,6 @@ services:
 volumes:
   postgres-dados:
   grafana-dados:
+  tempo-dados:
   sonarqube-dados:
   sonarqube-extensoes:

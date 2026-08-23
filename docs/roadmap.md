@@ -14,7 +14,7 @@
 | 3 | Laboratório N+1 | **Concluída** (2026-08-22) | Implementação completa de `SPEC-LAB-N1-001` (paginação adiada) |
 | 4 | Laboratório Race Condition / Lost Update | **Concluída** (2026-08-22) | Implementação completa de `SPEC-LAB-RACE-001` |
 | 5 | Laboratório Kafka / Idempotência | **Concluída** (2026-08-22) | Implementação completa de `SPEC-LAB-KAFKA-IDEMP-001` |
-| 6 | Observabilidade consolidada | Proposta | Métricas, logs e traces unificados entre laboratórios |
+| 6 | Observabilidade consolidada | **Concluída** (2026-08-23) | Logs estruturados, Prometheus/Grafana e tracing distribuído (Tempo) — `SPEC-JEL-005` |
 | 7 | Engineering AI Assistant | Proposta | Assistente de IA com contexto do laboratório |
 | 8 | Hardening | Proposta | Segurança, performance, UX, documentação final, CI/CD completo |
 

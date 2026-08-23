@@ -52,12 +52,33 @@ O laboratório de Kafka/idempotência exige os dois profiles juntos:
 Sem o profile `messaging`, o backend sobe normalmente (profile `core`
 sozinho continua funcionando para N+1 e Race Condition) — o endpoint
 deste laboratório responde `503` com mensagem clara em vez de travar.
+**Isso só é verdade a partir da correção em
+`docs/decisions/0007-fallback-de-bootstrap-servers-do-kafka.md`** — antes
+dela, o backend travava na inicialização sem o profile `messaging`
+(regressão real, encontrada durante a validação da Fase 6).
+
+## Ambiente local (profiles `core` + `observability`, validado em 2026-08-23)
+
+`docker compose --profile core --profile observability up --build`.
+
+| Serviço | URL | Observação |
+|---|---|---|
+| Prometheus | http://localhost:9090 | Validado — target `java-engineering-lab-backend` reportando `UP` |
+| Grafana | http://localhost:3300 | Login `admin` / `GRAFANA_SENHA_ADMIN` do `.env`. Datasources (Prometheus, Tempo) e o dashboard "Java Engineering Lab — Backend" já vêm provisionados, sem passos manuais |
+| Dashboard do backend | http://localhost:3300/d/jel-backend-overview | Validado no navegador com dados reais: disponibilidade, heap JVM, taxa de requisições HTTP, latência média, threads ativas |
+| Tempo (traces) | http://localhost:3200 | Validado — trace real de uma requisição encontrado via `/api/traces/{traceId}` e acessível pelo proxy do datasource no Grafana |
+
+Logs do backend em JSON estruturado (Elastic Common Schema), incluindo
+`correlationId`, `traceId` e `spanId` em cada linha gerada durante uma
+requisição — validado via `docker logs`.
+
+Sem o profile `observability`, o backend sobe normalmente (a exportação
+de traces apenas falha silenciosamente em background).
 
 ## Profiles ainda não validados em execução
 
 | Serviço | Profile | Status |
 |---|---|---|
-| Prometheus / Grafana | `observability` | Configuração escrita, não validada em execução — consolidada na Fase 6 |
 | SonarQube | `quality` | Configuração escrita, não validada em execução — entra na Fase 8 |
 
 Este arquivo será atualizado conforme cada profile for efetivamente

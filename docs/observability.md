@@ -1,8 +1,7 @@
 # Observabilidade — Java Engineering Lab
 
-> Diretrizes propostas para a Fase 6 (consolidação), mas que orientam a
-> instrumentação desde o primeiro laboratório (Fase 3), já que
-> observabilidade é parte do produto educacional, não um extra.
+> Consolidada na Fase 6 (`SPEC-JEL-005`) e validada contra infraestrutura
+> real — ver `docs/links.md` e `docs/testing-guide.md`.
 
 ## Princípio
 
@@ -49,7 +48,22 @@ parecer mais "observável".
 
 ## Status
 
-Este documento descreve o alvo. A instrumentação efetiva de ferramentas
-(ex.: `p6spy`/datasource-proxy para contagem de queries) é decisão de
-implementação tomada na SPEC de cada laboratório (ver, por exemplo,
-RNF-01 em `specs/labs/SPEC-LAB-N1-001-n-mais-um-queries.md`).
+- **Métricas**: Micrometer/Prometheus/Grafana implementados e validados
+  (Fase 6). Dashboard provisionado automaticamente em
+  `infra/grafana/provisioning/`.
+- **Tracing distribuído**: Micrometer Tracing + ponte OpenTelemetry +
+  exportador OTLP para Grafana Tempo, implementado e validado (Fase 6).
+  Amostragem em 100% (adequado para o volume de um laboratório
+  educacional, não para produção).
+- **Logs estruturados**: JSON (Elastic Common Schema, suporte nativo do
+  Spring Boot), com `correlationId`, `traceId` e `spanId` incluídos
+  automaticamente quando presentes no MDC/contexto de tracing.
+- **Contagem de queries por laboratório**: cada laboratório usa a
+  instrumentação mais apropriada ao que precisa demonstrar — o de N+1
+  usa `Hibernate Statistics` (ver ADR-0005), não um proxy de datasource
+  genérico.
+
+Este documento agora descreve o que está implementado, não mais só um
+alvo. Decisões técnicas específicas (propriedades corretas, correções de
+regressão) estão registradas em `docs/decisions/` (ADRs 0005-0007) e em
+`specs/architecture/SPEC-JEL-005-observabilidade-consolidada.md`.
