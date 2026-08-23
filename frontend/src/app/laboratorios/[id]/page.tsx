@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BadgeStatusLaboratorio } from "@/componentes/BadgeStatusLaboratorio";
+import { ConteudoLaboratorioN1 } from "@/componentes/ConteudoLaboratorioN1";
 import { buscarLaboratorioPorId } from "@/lib/laboratorios";
 
 export default async function PaginaLaboratorio({
@@ -35,7 +36,7 @@ export default async function PaginaLaboratorio({
           </p>
         </div>
 
-        {laboratorio.status === "PLANEJADO" ? (
+        {laboratorio.status === "PLANEJADO" && (
           <div className="rounded-lg border border-dashed border-black/[.12] p-6 text-sm text-zinc-600 dark:border-white/[.15] dark:text-zinc-400">
             Este laboratório ainda não está disponível para execução — a
             SPEC já existe (
@@ -45,10 +46,10 @@ export default async function PaginaLaboratorio({
             ), mas a implementação faz parte de uma fase futura do
             roadmap.
           </div>
-        ) : (
-          <div className="rounded-lg border border-black/[.08] p-6 text-sm text-zinc-600 dark:border-white/[.145] dark:text-zinc-400">
-            Fluxo de execução do laboratório em construção.
-          </div>
+        )}
+
+        {laboratorio.status === "DISPONIVEL" && laboratorio.id === "n1-queries" && (
+          <ConteudoLaboratorioN1 />
         )}
       </main>
     </div>

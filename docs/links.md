@@ -20,13 +20,15 @@ Subindo com `docker compose --profile core up --build` (após copiar
 |---|---|---|
 | Frontend | http://localhost:3000 | Porta configurável via `PORTA_FRONTEND` no `.env` |
 | Catálogo de laboratórios (frontend) | http://localhost:3000/laboratorios | Validado, consumindo a API real |
+| Laboratório de N+1 (frontend) | http://localhost:3000/laboratorios/n1-queries | Validado no navegador — execução real das 4 variantes |
 | Backend (API) | http://localhost:8080 | |
 | Catálogo de laboratórios (API) | http://localhost:8080/api/laboratorios | Validado retornando `200` |
-| Detalhe de laboratório (API) | http://localhost:8080/api/laboratorios/n1-queries | Validado retornando `200`; id inexistente retorna `404` |
+| Detalhe de laboratório (API) | http://localhost:8080/api/laboratorios/n1-queries | Validado retornando `200`, `status: DISPONIVEL`; id inexistente retorna `404` |
+| Execução do laboratório N+1 (API) | `POST http://localhost:8080/api/laboratorios/n1-queries/execucoes/{variante}` | `variante`: `problematico`, `join-fetch`, `entity-graph`, `dto-projection` — validado, `origemDados: REAL` |
 | Health-check do backend | http://localhost:8080/actuator/health | Validado retornando `{"status":"UP"}` |
 | Swagger UI | http://localhost:8080/swagger-ui/index.html | Validado retornando `200` |
 | OpenAPI (JSON) | http://localhost:8080/v3/api-docs | Validado retornando `200` |
-| PostgreSQL | localhost:5432 | Ainda sem uso pelo backend (entra na Fase 3, com `SPEC-LAB-N1-001`) |
+| PostgreSQL | localhost:5432 | Em uso real pelo backend desde a Fase 3 (dados do laboratório de N+1) |
 
 Sem Docker, os mesmos serviços sobem com `mvn spring-boot:run` (backend,
 porta 8080) e `npm run dev` (frontend, porta 3000 por padrão — o Next.js

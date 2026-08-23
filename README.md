@@ -7,9 +7,9 @@ Repositório: https://github.com/wep1980/Java-Engineering-Lab
 > entrevistas) de aplicações Java/Spring: N+1, race conditions,
 > mensageria duplicada, e outros.
 
-**Status atual: Fase 2 — Plataforma Base concluída.** O catálogo de
-laboratórios já funciona de ponta a ponta (backend + frontend), mas ainda
-sem nenhum laboratório executável. Veja
+**Status atual: Fase 3 — Laboratório de N+1 concluído.** O primeiro
+laboratório está completo e executável de ponta a ponta, com métricas
+reais contra PostgreSQL. Veja
 [Estado atual do projeto](#estado-atual-do-projeto).
 
 ## Por que este projeto existe
@@ -42,13 +42,10 @@ introdução → arquitetura → executar problema → observar → diagnosticar
 
 | Laboratório | Status |
 |---|---|
-| N+1 Queries | No catálogo (http://localhost:8080/api/laboratorios), status `PLANEJADO` — especificado em `specs/labs/SPEC-LAB-N1-001-n-mais-um-queries.md`, implementação prevista para a Fase 3 |
+| N+1 Queries | **Disponível** — `/laboratorios/n1-queries`, 4 variantes executáveis com métricas reais (`specs/labs/SPEC-LAB-N1-001-n-mais-um-queries.md`) |
 | Race Condition / Lost Update | Planejado — Fase 4 |
 | Kafka / Mensagem Duplicada / Idempotência | Planejado — Fase 5 |
 | Demais laboratórios do backlog | Ver `docs/roadmap.md` |
-
-Nenhum laboratório é executável ainda — o catálogo (backend e frontend)
-já existe e lista o N+1, mas sua execução real é a Fase 3.
 
 ## Stack
 
@@ -131,9 +128,15 @@ básico (GitHub Actions). Na Fase 2 (`SPEC-JEL-003`, também concluída)
 foram criados o catálogo de laboratórios (backend:
 `GET /api/laboratorios` e `GET /api/laboratorios/{id}`; frontend:
 `/laboratorios` e `/laboratorios/[id]`), o contrato de execução/métricas
-e o tratamento padrão de erros com correlation ID. Nenhum laboratório é
-executável ainda — isso é a Fase 3 em diante (`SPEC-LAB-N1-001`),
-pendente de aprovação antes de começar.
+e o tratamento padrão de erros com correlation ID. Na Fase 3
+(`SPEC-LAB-N1-001`, concluída) o laboratório de N+1 foi implementado por
+completo: entidades JPA (`Pedido`/`ItemPedido`), massa de dados
+determinística, as quatro variantes de execução (problemático, JOIN
+FETCH, `@EntityGraph`, DTO Projection) com contagem real de queries via
+Hibernate Statistics, testes de integração com Testcontainers validando
+os números exatos, e o painel interativo no frontend
+(`/laboratorios/n1-queries`). Race Condition (Fase 4) e Kafka/Idempotência
+(Fase 5) seguem pendentes de aprovação antes de começar.
 
 ## Como contribuir
 

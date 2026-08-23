@@ -1,6 +1,17 @@
 spring:
   application:
     name: java-engineering-lab-backend
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${POSTGRES_DB:java_engineering_lab}
+    username: ${POSTGRES_USER:jel}
+    password: ${POSTGRES_PASSWORD:troque-esta-senha-localmente}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        generate_statistics: true
 
 server:
   port: ${PORTA_BACKEND:8080}

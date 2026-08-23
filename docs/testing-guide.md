@@ -68,6 +68,30 @@ no Chrome (catálogo e detalhe do laboratório de N+1, incluindo o estado
 frontend→backend foi validada tanto localmente (`localhost`) quanto dentro
 da rede do Docker Compose (`http://backend:8080`).
 
+## Validação do laboratório de N+1 (Fase 3, 2026-08-22)
+
+Pré-requisito: backend rodando com PostgreSQL real (`docker compose --profile core up` ou `mvn spring-boot:run` com `docker compose --profile core up postgres`). Dados semeados automaticamente no startup (50 pedidos × 3 itens).
+
+| Endpoint | Método | Cenário | Resultado esperado |
+|---|---|---|---|
+| `/api/laboratorios/n1-queries/execucoes/problematico` | POST | Variante problemática | `200`, `metricas.quantidadeQueries: 51`, `metricas.quantidadePedidos: 50`, `origemDados: REAL` |
+| `/api/laboratorios/n1-queries/execucoes/join-fetch` | POST | JOIN FETCH | `200`, `metricas.quantidadeQueries: 1` |
+| `/api/laboratorios/n1-queries/execucoes/entity-graph` | POST | @EntityGraph | `200`, `metricas.quantidadeQueries: 1` |
+| `/api/laboratorios/n1-queries/execucoes/dto-projection` | POST | DTO Projection | `200`, `metricas.quantidadeQueries: 1` |
+| `/api/laboratorios/n1-queries/execucoes/inexistente` | POST | Variante inválida | `400`, corpo no formato de erro padrão |
+
+Validações executadas:
+- Testes de integração com Testcontainers (`ExecucaoN1ServiceIntegrationTest`,
+  4 testes) comprovam as contagens exatas contra PostgreSQL real — não é
+  estimativa, é `Statistics.getPrepareStatementCount()` do Hibernate (ADR-0005).
+- Os 5 cenários da tabela acima foram validados manualmente com `curl`
+  contra o ambiente Docker Compose real.
+- O painel interativo em `/laboratorios/n1-queries` foi validado no
+  Chrome: os quatro botões disparam execuções reais (via proxy same-origin
+  em `frontend/src/app/api/laboratorios/[id]/execucoes/[variante]/route.ts`),
+  os números exibidos batem com os da API, e o card de comparação
+  "antes × depois" aparece corretamente. Sem erros no console.
+
 ## Preenchimento futuro (por fase)
 
 - **Fase 2/3**: pré-requisitos de ambiente, ordem de subida dos serviços

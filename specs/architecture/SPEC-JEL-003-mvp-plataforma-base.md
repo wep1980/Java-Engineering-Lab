@@ -109,12 +109,14 @@ identificação/tempo são o que é comum a todos.
       visual clara dessa origem (não se aplica ainda nesta fase — não há
       métricas exibidas até `SPEC-LAB-N1-001`).
 
-### Fase 3 (`SPEC-LAB-N1-001`, concluem RF-02/RF-04/RF-05 por completo)
+### Fase 3 (`SPEC-LAB-N1-001`) — concluída em 2026-08-22
 
-- [ ] Endpoint de execução implementado e testado para o laboratório de N+1.
-- [ ] Página do laboratório de N+1 com o fluxo completo (execução,
-      observação, diagnóstico, comparação antes/depois).
-- [ ] Status do laboratório de N+1 no catálogo atualizado para `DISPONIVEL`.
+- [x] Endpoint de execução implementado e testado para o laboratório de N+1
+      (`POST /api/laboratorios/n1-queries/execucoes/{variante}`).
+- [x] Página do laboratório de N+1 com o fluxo completo (execução real,
+      observação, diagnóstico, comparação antes/depois). Paginação
+      (RF-05) adiada — ver `SPEC-LAB-N1-001`.
+- [x] Status do laboratório de N+1 no catálogo atualizado para `DISPONIVEL`.
 
 ## Observação de status
 

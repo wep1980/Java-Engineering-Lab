@@ -1998,4 +1998,40 @@ Revisei o `git status` (80 arquivos, nenhum segredo, `.env` real não estava pre
 
 Documentei a política que você pediu ("sempre commits e pushs") em `CLAUDE.md` e em `docs/decisions/0004-repositorio-publico-e-push-automatico.md`, para que isso valha em sessões futuras também: a partir de agora, mudanças aprovadas são commitadas e enviadas sem eu pedir confirmação a cada vez — mas ações destrutivas (force-push, reset --hard, exclusão de branch) continuam exigindo sua confirmação explícita, como já era o padrão. Atualizei também `docs/links.md` e o `README.md` com a URL real do repositório.
 
-Vou commitar e subir essas atualizações de documentação agora mesmo, já seguindo a nova política.
+Commitei e subi essas atualizações de documentação (commit `0ec2b18`).
+
+---
+
+## Interação 2026-08-22 20:47:38
+
+### Usuário
+
+sim, avança para a Fase 3
+
+### Claude
+
+Implementei o laboratório de N+1 por completo (`SPEC-LAB-N1-001`), atualizando a SPEC com o escopo entregue antes do código.
+
+**Domínio**: `Pedido`/`ItemPedido` (JPA, `@OneToMany` lazy por padrão), pacote `laboratorios/n1`. Massa de dados determinística (50 pedidos × 3 itens) semeada automaticamente no startup (`SeedDadosN1` + `InicializadorDadosN1`).
+
+**Backend**: `PedidoRepository` com as três soluções (`JOIN FETCH`, `@EntityGraph`, DTO Projection via constructor expression) além da variante problemática; `ExecucaoN1Service` mede o custo real em queries via `Hibernate Statistics.getPrepareStatementCount()` (decisão registrada em ADR-0005, sem dependência nova); `ExecucaoN1Controller` expõe `POST /api/laboratorios/n1-queries/execucoes/{variante}`. Também precisei ativar JPA de verdade pela primeira vez (estava deliberadamente adiado desde a Fase 1): adicionei `spring-boot-starter-data-jpa`, driver PostgreSQL, e configurei o datasource.
+
+Percalços técnicos resolvidos: Testcontainers 2.x renomeou os artefatos Maven (`org.testcontainers:postgresql` → `testcontainers-postgresql`, idem `junit-jupiter`) — corrigido via `testcontainers-bom` no `dependencyManagement`; o teste de contexto genérico (`JavaEngineeringLabApplicationTests`) parou de subir sem um Postgres real disponível, então passou a usar Testcontainers também, em vez de mockar a única coisa que o teste realmente valida.
+
+**Testes**: `ExecucaoN1ServiceIntegrationTest` — 4 testes com Testcontainers (PostgreSQL real) comprovando a contagem *exata* de queries: 51 para a variante problemática (1 + 50), 1 para cada uma das três corrigidas. `ExecucaoN1ControllerTest` cobre o contrato HTTP e o caso de variante inválida (400). 12/12 testes passando no total.
+
+**Frontend**: proxy same-origin (`app/api/laboratorios/[id]/execucoes/[variante]/route.ts`) para o navegador nunca precisar chamar o backend diretamente (evita CORS, funciona igual em dev e em Docker); `PainelExecucaoN1` (client component) com os 4 botões, métricas em tempo real e comparação "antes × depois"; `ConteudoLaboratorioN1` com o conteúdo educacional (arquitetura, código problemático, as três soluções com trade-offs, por que EAGER não é solução, perguntas de entrevista). Catálogo atualizado: N+1 agora `DISPONIVEL`.
+
+**Validação real** (não só "deveria funcionar"):
+- `mvn test`: 12/12 passando, incluindo os 4 testes de integração com Postgres real via Testcontainers.
+- `docker compose --profile core up --build`: ambiente completo, dados semeados automaticamente; `curl` manual nas 4 variantes + catálogo confirmou os números exatos (51/1/1/1 queries, `origemDados: REAL`) e o `404` para variante inválida.
+- **Testei no Chrome de verdade**: cliquei nos 4 botões da página `/laboratorios/n1-queries` uma por uma — os números batem exatamente com os da API, o card "antes × depois" apareceu corretamente, zero erros no console.
+- Ambiente derrubado ao final (`docker compose down` + remoção do volume de teste do Postgres); nada ficou rodando.
+
+**Adiado deliberadamente**: RF-05 (paginação) — documentado em `SPEC-LAB-N1-001` como pendência explícita, não como requisito descartado, porque implementá-la direito exige também demonstrar o efeito de "paginação em memória" do Hibernate com `JOIN FETCH`/`@EntityGraph`, que é conteúdo à parte.
+
+Documentação atualizada: `SPEC-LAB-N1-001`, `SPEC-JEL-003`, `README.md`, `docs/roadmap.md`, `docs/links.md`, `docs/testing-guide.md`, novo `docs/decisions/0005-instrumentacao-de-queries-via-hibernate-statistics.md`.
+
+Vou commitar e subir tudo agora, seguindo a política combinada.
+
+**Próximo passo natural**: Fase 4 (Race Condition / Lost Update), que também depende da sua aprovação antes de começar.

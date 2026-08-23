@@ -17,7 +17,7 @@ public class CatalogoLaboratoriosService {
                     "n1-queries",
                     "N+1 Queries",
                     "Demonstrar o problema de N+1 consultas com JPA/Hibernate e suas soluções (JOIN FETCH, EntityGraph, DTO Projection).",
-                    StatusLaboratorio.PLANEJADO
+                    StatusLaboratorio.DISPONIVEL
             )
     );
 

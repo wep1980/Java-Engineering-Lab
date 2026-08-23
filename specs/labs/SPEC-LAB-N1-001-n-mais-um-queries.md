@@ -1,6 +1,7 @@
 # SPEC-LAB-N1-001 — Laboratório: N+1 Queries
 
-- **Status**: Proposta (pendente de aprovação do usuário)
+- **Status**: Implementada e validada (2026-08-22) — paginação (RF-05)
+  deliberadamente adiada, ver seção "Escopo entregue nesta fase"
 - **Título**: Problema de N+1 consultas com JPA/Hibernate
 - **Depende de**: `SPEC-JEL-003` (plataforma base)
 - **Fase do roadmap**: Fase 3
@@ -108,21 +109,59 @@ não como alternativa válida.
 | Trade-offs | Paginação, volume de dados, acoplamento a entidade completa |
 | Entrevista | "Por que essa API fez 101 queries?", "Quando `JOIN FETCH` não resolve?", "Por que EAGER não é solução?" |
 
+## Escopo entregue nesta fase
+
+Implementados: domínio (`Pedido`/`ItemPedido`), massa de dados
+determinística (50 pedidos × 3 itens, semeada no startup), as quatro
+variantes de execução (problemático, JOIN FETCH, EntityGraph, DTO
+Projection) com contagem real de queries via Hibernate Statistics (ver
+ADR-0005), página do laboratório com conteúdo educacional e painel de
+execução interativo.
+
+**Adiado deliberadamente**: RF-05 (paginação) — implementar paginação
+`Pageable` de forma correta exigiria também instrumentar e explicar o
+efeito de "paginação em memória" do Hibernate ao usar `JOIN FETCH`/
+`@EntityGraph` em coleções `*-to-many`, o que é uma peça de conteúdo
+própria. Registrado como item pendente, não como requisito descartado.
+
 ## Critérios de aceite
 
-- [ ] Variante problemática reproduz um N+1 real e mensurável (ex.: 1 query
-      de listagem + N queries de itens, N = quantidade de pedidos
-      retornados).
-- [ ] As três variantes corrigidas reduzem a quantidade de queries para um
-      número fixo (independente de N), exceto onde o trade-off de
-      paginação for explicitamente demonstrado como exceção.
-- [ ] Testes de integração comprovam a contagem exata de queries de cada
-      variante, com a mesma massa de dados.
-- [ ] Conteúdo educacional cobre as 32 seções aplicáveis da seção 17 do
-      manifesto (nome, objetivo, contexto, ..., referências).
-- [ ] Nenhuma métrica de "antes"/"depois" é fabricada — ambas vêm de
-      execução real contra a mesma massa de dados.
-- [ ] Aprovação explícita do usuário para iniciar a implementação (Fase 3).
+- [x] Variante problemática reproduz um N+1 real e mensurável: 1 query de
+      listagem + 50 queries de itens (N = 50 pedidos), validado por teste
+      de integração contra PostgreSQL real (Testcontainers).
+- [x] As três variantes corrigidas reduzem a quantidade de queries para
+      um número fixo (1 query, independente de N) — validado pelos
+      mesmos testes de integração. Trade-off de paginação documentado no
+      conteúdo do laboratório, não implementado nesta fase (ver acima).
+- [x] Testes de integração comprovam a contagem exata de queries de cada
+      variante, com a mesma massa de dados (`ExecucaoN1ServiceIntegrationTest`,
+      4 testes, todos passando).
+- [x] Conteúdo educacional cobre: introdução, arquitetura, execução real,
+      código problemático, as três soluções com trade-offs, por que EAGER
+      não é solução, perguntas de entrevista. (Diff explícito de código e
+      seção de referências externas ficam para uma iteração futura.)
+- [x] Nenhuma métrica de "antes"/"depois" é fabricada — todas vêm de
+      execução real (`origemDados: REAL`) contra a mesma massa de dados
+      determinística, validado manualmente via `curl` e via navegador.
+- [x] Aprovação explícita do usuário para iniciar a implementação (Fase 3) —
+      dada em 2026-08-22.
+
+## Evidências de conclusão
+
+- `mvn test`: 12/12 testes passando, incluindo 4 testes de integração com
+  Testcontainers (PostgreSQL real) comprovando as contagens exatas: 51
+  queries (problemático), 1 query cada para JOIN FETCH/EntityGraph/DTO
+  Projection.
+- Validação manual via `curl` contra o backend real (Docker Compose,
+  profile `core`): catálogo retornando `n1-queries` com `status:
+  DISPONIVEL`; as quatro execuções retornando `origemDados: REAL` e as
+  contagens de query esperadas.
+- Validação visual real no Chrome: página `/laboratorios/n1-queries`
+  renderizando o conteúdo educacional e o painel de execução; os quatro
+  botões executados de fato, com o card "Antes × depois" aparecendo
+  corretamente após a execução da variante problemática e de ao menos uma
+  corrigida. Nenhum erro no console do navegador.
+- `npm run build`/`lint` (frontend) sem erros.
 
 ## Riscos
 

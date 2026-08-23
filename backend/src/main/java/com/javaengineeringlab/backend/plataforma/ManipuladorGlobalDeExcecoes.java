@@ -18,6 +18,12 @@ public class ManipuladorGlobalDeExcecoes {
         return construirResposta(HttpStatus.NOT_FOUND, excecao.getMessage(), request);
     }
 
+    @ExceptionHandler(RequisicaoInvalidaException.class)
+    public ResponseEntity<ErroResposta> tratarRequisicaoInvalida(
+            RequisicaoInvalidaException excecao, HttpServletRequest request) {
+        return construirResposta(HttpStatus.BAD_REQUEST, excecao.getMessage(), request);
+    }
+
     private ResponseEntity<ErroResposta> construirResposta(
             HttpStatus status, String mensagem, HttpServletRequest request) {
         String correlationId = MDC.get(FiltroCorrelationId.CHAVE_MDC);
