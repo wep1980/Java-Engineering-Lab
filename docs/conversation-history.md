@@ -2353,4 +2353,16 @@ Escrevi `specs/labs/SPEC-LAB-CONN-POOL-001-connection-pool-exhaustion.md` seguin
 
 **Achado real durante a implementação**: a primeira versão registrava os dois pools de demonstração como `@Bean HikariDataSource` avulsos — isso quebrou silenciosamente a criação do `entityManagerFactory` do JPA para **todos** os laboratórios (não só este), porque a autoconfiguração do JPA exige um único candidato de `DataSource` no contexto e, com 3 beans desse tipo sem nenhum `@Primary`, desistiu de criar o bean. Só descobri isso rodando o teste de integração real (não apareceu na compilação). Corrigi construindo os pools diretamente no construtor do serviço, a partir de `JdbcConnectionDetails` (que não é do tipo `DataSource`), documentado em `docs/decisions/0009-pools-de-demonstracao-nao-sao-beans-de-datasource.md`.
 
-Validação real completa: 29/29 testes do backend passando (5 novos: 2 de controller, 3 de integração com Testcontainers confirmando que `pool-pequeno` gera falhas reais por timeout e as duas corrigidas não geram nenhuma); `npm run build`/`lint` sem erros; execução real via `curl` (`pool-pequeno` → 4 sucessos/6 falhas em 1004ms; `pool-redimensionado` → 10/0 em 504ms; `conexao-curta` → 10/0 em **505ms**, praticamente empatada usando 6× menos conexões — reforça com números reais que a correção "certa" não é mais lenta); isolamento do pool principal confirmado disparando esse laboratório em paralelo com o de N+1, que respondeu normalmente; validação visual real no Chrome com as três variantes clicadas e os números/cores corretos na tela. Atualizei toda a documentação (SPEC com evidências, roadmap, links, testing-guide, README) e vou commitar e enviar tudo a seguir.
+Validação real completa: 29/29 testes do backend passando (5 novos: 2 de controller, 3 de integração com Testcontainers confirmando que `pool-pequeno` gera falhas reais por timeout e as duas corrigidas não geram nenhuma); `npm run build`/`lint` sem erros; execução real via `curl` (`pool-pequeno` → 4 sucessos/6 falhas em 1004ms; `pool-redimensionado` → 10/0 em 504ms; `conexao-curta` → 10/0 em **505ms**, praticamente empatada usando 6× menos conexões — reforça com números reais que a correção "certa" não é mais lenta); isolamento do pool principal confirmado disparando esse laboratório em paralelo com o de N+1, que respondeu normalmente; validação visual real no Chrome com as três variantes clicadas e os números/cores corretos na tela. Atualizei toda a documentação (SPEC com evidências, roadmap, links, testing-guide, README), comitei e enviei tudo — Backend CI (1m50s, cache do Dependency-Check funcionou) e Frontend CI passaram no `master`.
+
+---
+
+## Interação 2026-08-23 14:34:47
+
+### Usuário
+
+próximo do backlog, mesmo critério: Deadlock ou LazyInitializationException
+
+### Claude
+
+Pergunta exploratória — recomendei Deadlock, com o trade-off principal (LazyInitializationException reaproveitaria as mesmas entidades do laboratório de N+1, implementação mais rápida, mas é conceitualmente muito próximo do que já foi coberto — mesma regra de sessão/lazy loading do Hibernate; Deadlock é um domínio de problema novo — múltiplos recursos travados em ordens diferentes — e reaproveita o mesmo padrão de concorrência real já validado duas vezes, Race Condition e Connection Pool Exhaustion), deixando claro que é uma sugestão a ser redirecionada — nenhuma implementação foi iniciada.
