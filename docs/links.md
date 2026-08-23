@@ -25,6 +25,8 @@ Subindo com `docker compose --profile core up --build` (após copiar
 | Catálogo de laboratórios (API) | http://localhost:8080/api/laboratorios | Validado retornando `200` |
 | Detalhe de laboratório (API) | http://localhost:8080/api/laboratorios/n1-queries | Validado retornando `200`, `status: DISPONIVEL`; id inexistente retorna `404` |
 | Execução do laboratório N+1 (API) | `POST http://localhost:8080/api/laboratorios/n1-queries/execucoes/{variante}` | `variante`: `problematico`, `join-fetch`, `entity-graph`, `dto-projection` — validado, `origemDados: REAL` |
+| Laboratório de Race Condition (frontend) | http://localhost:3000/laboratorios/race-condition | Validado no navegador — 3 variantes com concorrência real |
+| Execução do laboratório Race Condition (API) | `POST http://localhost:8080/api/laboratorios/race-condition/execucoes/{variante}` | `variante`: `sem-controle`, `otimista`, `pessimista` — validado, `origemDados: REAL` |
 | Health-check do backend | http://localhost:8080/actuator/health | Validado retornando `{"status":"UP"}` |
 | Swagger UI | http://localhost:8080/swagger-ui/index.html | Validado retornando `200` |
 | OpenAPI (JSON) | http://localhost:8080/v3/api-docs | Validado retornando `200` |

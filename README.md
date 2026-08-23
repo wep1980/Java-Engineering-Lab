@@ -7,10 +7,10 @@ Repositório: https://github.com/wep1980/Java-Engineering-Lab
 > entrevistas) de aplicações Java/Spring: N+1, race conditions,
 > mensageria duplicada, e outros.
 
-**Status atual: Fase 3 — Laboratório de N+1 concluído.** O primeiro
-laboratório está completo e executável de ponta a ponta, com métricas
-reais contra PostgreSQL. Veja
-[Estado atual do projeto](#estado-atual-do-projeto).
+**Status atual: Fase 4 — Laboratório de Race Condition concluído.** Dois
+laboratórios completos e executáveis de ponta a ponta, com métricas
+reais contra PostgreSQL — o segundo com concorrência real (threads
+reais). Veja [Estado atual do projeto](#estado-atual-do-projeto).
 
 ## Por que este projeto existe
 
@@ -43,7 +43,7 @@ introdução → arquitetura → executar problema → observar → diagnosticar
 | Laboratório | Status |
 |---|---|
 | N+1 Queries | **Disponível** — `/laboratorios/n1-queries`, 4 variantes executáveis com métricas reais (`specs/labs/SPEC-LAB-N1-001-n-mais-um-queries.md`) |
-| Race Condition / Lost Update | Planejado — Fase 4 |
+| Race Condition / Lost Update | **Disponível** — `/laboratorios/race-condition`, 3 variantes com concorrência real (`specs/labs/SPEC-LAB-RACE-001-race-condition-lost-update.md`) |
 | Kafka / Mensagem Duplicada / Idempotência | Planejado — Fase 5 |
 | Demais laboratórios do backlog | Ver `docs/roadmap.md` |
 
@@ -135,8 +135,15 @@ determinística, as quatro variantes de execução (problemático, JOIN
 FETCH, `@EntityGraph`, DTO Projection) com contagem real de queries via
 Hibernate Statistics, testes de integração com Testcontainers validando
 os números exatos, e o painel interativo no frontend
-(`/laboratorios/n1-queries`). Race Condition (Fase 4) e Kafka/Idempotência
-(Fase 5) seguem pendentes de aprovação antes de começar.
+(`/laboratorios/n1-queries`). Na Fase 4 (`SPEC-LAB-RACE-001`, concluída)
+o laboratório de Race Condition / Lost Update foi implementado com
+**concorrência real**: 10 depósitos concorrentes disparados por threads
+reais (`ExecutorService` + barreira de largada), variante sem controle
+perdendo atualizações de forma determinística, e as duas soluções
+(Optimistic Locking com `@Version` e Pessimistic Locking com
+`SELECT ... FOR UPDATE`) validadas por testes de integração com
+Testcontainers. Kafka/Idempotência (Fase 5) segue pendente de aprovação
+antes de começar.
 
 ## Como contribuir
 

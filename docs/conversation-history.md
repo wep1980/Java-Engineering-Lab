@@ -2032,6 +2032,34 @@ Percalços técnicos resolvidos: Testcontainers 2.x renomeou os artefatos Maven 
 
 Documentação atualizada: `SPEC-LAB-N1-001`, `SPEC-JEL-003`, `README.md`, `docs/roadmap.md`, `docs/links.md`, `docs/testing-guide.md`, novo `docs/decisions/0005-instrumentacao-de-queries-via-hibernate-statistics.md`.
 
-Vou commitar e subir tudo agora, seguindo a política combinada.
+Commitei e subi tudo (commit `fa543d8`) e confirmei que os dois workflows de CI (Backend CI, Frontend CI) rodaram e passaram no GitHub Actions — inclusive os testes com Testcontainers funcionaram no runner do GitHub, não só localmente.
 
 **Próximo passo natural**: Fase 4 (Race Condition / Lost Update), que também depende da sua aprovação antes de começar.
+
+---
+
+## Interação 2026-08-22 21:05:11
+
+### Usuário
+
+sim, avança para a Fase 4
+
+### Claude
+
+Criei `SPEC-LAB-RACE-001-race-condition-lost-update.md` antes do código, seguindo o esquema de IDs (ADR-0003).
+
+**Domínio**: conta bancária com 10 depósitos de R$ 100 concorrentes reais (`ExecutorService` + `CountDownLatch` como barreira de largada — todas as threads liberadas ao mesmo tempo). Duas entidades foram necessárias por uma restrição real do JPA: `@Version` se aplica a toda escrita de uma entidade incondicionalmente, então não dá para ter "a mesma entidade" ora com controle otimista ora sem. `ContaBancaria` (sem `@Version`, usada por `sem-controle` e `pessimista`) e `ContaBancariaVersionada` (com `@Version`, usada por `otimista`), ambas herdando de `ContaBancariaBase` (`@MappedSuperclass`) para não duplicar campos/lógica de domínio. Documentei essa decisão na própria SPEC.
+
+**As três variantes**: cada operação faz leitura → espera artificial de 100ms → escrita — técnica padrão para ampliar a janela de corrida e tornar o bug 100% reproduzível em teste automatizado (documentado explicitamente como técnica de teste, não prática de produção). `sem-controle`: sem nenhum controle. `otimista`: `@Version` + retentativa em `ObjectOptimisticLockingFailureException` (sem repetir a espera artificial nas retentativas, só na primeira tentativa). `pessimista`: `SELECT ... FOR UPDATE` via `@Lock(PESSIMISTIC_WRITE)`, serializando o acesso. Também aumentei o pool do HikariCP (10→20) já que 10 transações concorrentes seguram conexão durante a espera artificial.
+
+**Testes**: `ExecucaoRaceConditionServiceIntegrationTest` com Testcontainers e concorrência real — 3 testes comprovando exatamente o esperado: `sem-controle` perde 9 de 10 atualizações de forma **determinística** (não só "às vezes"), `otimista` converge para o saldo correto com conflitos reais detectados, `pessimista` converge sem nenhum conflito. Rodei a suite 3 vezes seguidas para garantir que não é flaky — passou nas três. 17/17 testes no total.
+
+**Validação real contra o ambiente**: `curl` no Docker Compose real mostrou exatamente o trade-off que a SPEC previa — `sem-controle` R$ 100 em 202ms (rápido e errado), `otimista` R$ 1.000 com 45 conflitos em 241ms, `pessimista` R$ 1.000 com 0 conflitos mas em 1123ms (~5x mais lento — o custo real da serialização). **Testei no Chrome de verdade**: os três botões, com o card de saldo final ficando vermelho quando há perda e verde quando não há. Zero erros no console.
+
+Frontend reaproveitou o proxy genérico já criado na Fase 3 (`app/api/laboratorios/[id]/execucoes/[variante]/route.ts`) sem nenhuma mudança — validou que aquele design generalizava bem para um segundo laboratório. Catálogo atualizado: `race-condition` agora `DISPONIVEL`.
+
+Documentação atualizada: `SPEC-LAB-RACE-001` (evidências completas), `README.md`, `docs/roadmap.md`, `docs/links.md`, `docs/testing-guide.md`.
+
+Ambiente derrubado ao final, nada ficou rodando. Vou commitar e subir agora.
+
+**Próximo passo natural**: Fase 5 (Kafka / Mensagem Duplicada / Idempotência), que também depende da sua aprovação.

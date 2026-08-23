@@ -5,6 +5,11 @@ spring:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${POSTGRES_DB:java_engineering_lab}
     username: ${POSTGRES_USER:jel}
     password: ${POSTGRES_PASSWORD:troque-esta-senha-localmente}
+    hikari:
+      # O laboratório de Race Condition dispara 10 transações concorrentes
+      # que seguram a conexão durante uma espera artificial (ver
+      # SPEC-LAB-RACE-001) — o pool precisa comportar isso com folga.
+      maximum-pool-size: 20
   jpa:
     open-in-view: false
     hibernate:

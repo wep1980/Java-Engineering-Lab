@@ -18,6 +18,12 @@ public class CatalogoLaboratoriosService {
                     "N+1 Queries",
                     "Demonstrar o problema de N+1 consultas com JPA/Hibernate e suas soluções (JOIN FETCH, EntityGraph, DTO Projection).",
                     StatusLaboratorio.DISPONIVEL
+            ),
+            new LaboratorioResumo(
+                    "race-condition",
+                    "Race Condition / Lost Update",
+                    "Demonstrar a perda silenciosa de atualizações sob concorrência real, e as soluções com Optimistic Locking (@Version) e Pessimistic Locking.",
+                    StatusLaboratorio.DISPONIVEL
             )
     );
 

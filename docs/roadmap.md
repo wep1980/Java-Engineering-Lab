@@ -12,7 +12,7 @@
 | 1 | Bootstrap de código | **Concluída** (2026-08-22) | Esqueleto de `backend/`/`frontend/` (`SPEC-JEL-004`), Docker Compose, CI básico |
 | 2 | Plataforma base | **Concluída** (2026-08-22) | Catálogo de laboratórios, contrato de execução/métricas (`SPEC-JEL-003`) |
 | 3 | Laboratório N+1 | **Concluída** (2026-08-22) | Implementação completa de `SPEC-LAB-N1-001` (paginação adiada) |
-| 4 | Laboratório Race Condition / Lost Update | Proposta | `SPEC-LAB-RACE-001` (a criar) |
+| 4 | Laboratório Race Condition / Lost Update | **Concluída** (2026-08-22) | Implementação completa de `SPEC-LAB-RACE-001` |
 | 5 | Laboratório Kafka / Idempotência | Proposta | `SPEC-LAB-KAFKA-IDEMP-001` (a criar) |
 | 6 | Observabilidade consolidada | Proposta | Métricas, logs e traces unificados entre laboratórios |
 | 7 | Engineering AI Assistant | Proposta | Assistente de IA com contexto do laboratório |

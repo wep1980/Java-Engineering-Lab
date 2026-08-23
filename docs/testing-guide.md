@@ -92,6 +92,32 @@ Validações executadas:
   os números exibidos batem com os da API, e o card de comparação
   "antes × depois" aparece corretamente. Sem erros no console.
 
+## Validação do laboratório de Race Condition (Fase 4, 2026-08-22)
+
+Pré-requisito: backend rodando com PostgreSQL real. Cada execução dispara
+10 depósitos concorrentes reais de R$ 100,00 na conta de demonstração
+correspondente (reiniciada a cada chamada).
+
+| Endpoint | Método | Cenário | Resultado esperado |
+|---|---|---|---|
+| `/api/laboratorios/race-condition/execucoes/sem-controle` | POST | Sem controle de concorrência | `200`, `metricas.saldoFinal < 1000`, `metricas.atualizacoesPerdidas > 0` (tipicamente 9) |
+| `/api/laboratorios/race-condition/execucoes/otimista` | POST | Optimistic Locking | `200`, `metricas.saldoFinal: 1000`, `metricas.atualizacoesPerdidas: 0`, `metricas.conflitosDetectadosERetentados > 0` |
+| `/api/laboratorios/race-condition/execucoes/pessimista` | POST | Pessimistic Locking | `200`, `metricas.saldoFinal: 1000`, `metricas.atualizacoesPerdidas: 0`, `metricas.conflitosDetectadosERetentados: 0`, `duracaoMs` nitidamente maior (acesso serializado) |
+| `/api/laboratorios/race-condition/execucoes/inexistente` | POST | Variante inválida | `400`, formato de erro padrão |
+
+Validações executadas:
+- Testes de integração com Testcontainers e **concorrência real**
+  (`ExecutorService` + `CountDownLatch`) — `ExecucaoRaceConditionServiceIntegrationTest`,
+  3 testes, rodados 3 vezes seguidas sem falha (não-flaky).
+- Os 4 cenários da tabela acima validados manualmente com `curl` contra
+  o ambiente Docker Compose real. Exemplo real observado: `sem-controle`
+  → R$ 100 em 202ms; `otimista` → R$ 1.000 com 45 conflitos em 241ms;
+  `pessimista` → R$ 1.000 com 0 conflitos em 1123ms.
+- Painel interativo em `/laboratorios/race-condition` validado no
+  Chrome: os três botões disparam execuções reais, o card de saldo final
+  fica vermelho quando há perda e verde quando não há. Sem erros no
+  console.
+
 ## Preenchimento futuro (por fase)
 
 - **Fase 2/3**: pré-requisitos de ambiente, ordem de subida dos serviços
