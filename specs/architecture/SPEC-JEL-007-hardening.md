@@ -173,6 +173,42 @@ usuário em pontos que só ele pode decidir (ex.: provedor de IA na Fase
   0-10 real).
 - `.github/workflows/frontend-ci.yml`: step `npm audit --audit-level=high`
   adicionado, `continue-on-error: true` (informativo).
+- **Primeira execução real do Dependency-Check no CI** (após o usuário
+  cadastrar a chave da NVD): job concluído com sucesso em 5m27s
+  (a maior parte é a sincronização inicial da base de CVEs, sem cache
+  ainda). Relatório real baixado e inspecionado — 8 CVEs distintos
+  citados entre as dependências do backend. Triagem manual real de cada
+  um (não apenas contagem bruta):
+  - `CVE-2026-53914` (Kotlin, CRÍTICO 9.8): deserialização insegura no
+    **cache de build** do compilador Kotlin — o projeto não usa Kotlin
+    nem seu build cache; `kotlin-stdlib` é dependência transitiva.
+    Falso positivo para este projeto.
+  - `CVE-2026-39882/39883/41178` (3 CVEs): todos são do
+    **OpenTelemetry-Go** (implementação em Go), não do
+    `opentelemetry-semconv` Java usado aqui — falso positivo por
+    correspondência de CPE entre implementações de linguagens
+    diferentes com nome de projeto parecido.
+  - `CVE-2026-66299` (Tomcat): afeta a **aplicação de exemplo de
+    WebSocket chat** do Tomcat, que não é distribuída pelo
+    `tomcat-embed-core` do Spring Boot. Falso positivo.
+  - `CVE-2026-41115` (Apache Kafka): vulnerabilidade de autorização no
+    **broker** Kafka; o projeto usa apenas `kafka-clients` (biblioteca
+    cliente), o broker roda em container separado da imagem oficial.
+    Não aplicável ao artefato analisado.
+  - `CVE-2026-75838` (DOMPurify, severidade média/RETIREJS): o único
+    achado plausivelmente real — DOMPurify é distribuído dentro dos
+    assets estáticos do `swagger-ui` (via
+    `springdoc-openapi-starter-webmvc-ui`). Baixo risco prático (UI de
+    documentação da API, não recebe entrada de usuários não
+    autenticados de forma relevante), mas fica registrado como item de
+    acompanhamento para uma futura atualização do
+    `springdoc-openapi-starter-webmvc-ui`.
+
+  Essa mistura de falsos positivos com um achado real de baixo risco é
+  exatamente o cenário previsto na tabela de Riscos desta SPEC — reforça
+  a decisão de manter o scan informativo nesta fase, já que travar o
+  build automaticamente teria bloqueado o CI por 5 dos 6 achados serem
+  irrelevantes para este projeto.
 
 ### T2 — Testes
 

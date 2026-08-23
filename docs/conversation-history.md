@@ -2285,4 +2285,44 @@ veja se agora deu certo
 
 ### Claude
 
-Confirmei via `gh secret list --repo wep1980/Java-Engineering-Lab`: o secret `NVD_API_KEY` está cadastrado (criado em 2026-08-23T13:17:02Z). Revalidei tudo mais uma vez localmente (`mvn -B verify` com 24/24 testes, `npm run build`/`lint` sem erros, `docker compose --profile core up` confirmando backend/frontend/página 404/título dinâmico funcionando sem regressão, ambiente encerrado de forma limpa em seguida). Atualizei `docs/roadmap.md` (Fase 8 concluída), `docs/links.md` (URLs do profile `quality`) e `docs/testing-guide.md` (seção de validação da Fase 8) e o `README.md` (status atual e parágrafo de estado do projeto). Identifiquei, ao revisar este próprio histórico, que várias mensagens do usuário neste turno não tinham sido registradas como o protocolo exige — reconstruí as entradas correspondentes acima antes de prosseguir para o commit final.
+Confirmei via `gh secret list --repo wep1980/Java-Engineering-Lab`: o secret `NVD_API_KEY` está cadastrado (criado em 2026-08-23T13:17:02Z). Revalidei tudo mais uma vez localmente (`mvn -B verify` com 24/24 testes, `npm run build`/`lint` sem erros, `docker compose --profile core up` confirmando backend/frontend/página 404/título dinâmico funcionando sem regressão, ambiente encerrado de forma limpa em seguida). Atualizei `docs/roadmap.md` (Fase 8 concluída), `docs/links.md` (URLs do profile `quality`) e `docs/testing-guide.md` (seção de validação da Fase 8) e o `README.md` (status atual e parágrafo de estado do projeto). Identifiquei, ao revisar este próprio histórico, que várias mensagens do usuário neste turno não tinham sido registradas como o protocolo exige — reconstruí as entradas correspondentes acima antes de prosseguir para o commit final. Fiz o commit e push da Fase 8 completa (`SPEC-JEL-007`).
+
+---
+
+## Interação 2026-08-23 10:35:00 (aproximado)
+
+### Usuário
+
+me envie o mesmo link so que do financas para eu conseguir copiar
+
+### Claude
+
+Passei o link (`github.com/wep1980/wepdev-financas/settings/secrets/actions`), mas alertei que não adiantaria: o GitHub nunca reexibe o valor de um secret já salvo, nem para o dono do repositório — só existe a opção de sobrescrever ("Update secret"), nunca de visualizar. Sugeri, como alternativa mais rápida, gerar uma chave nova e gratuita em `nvd.nist.gov/developers/request-an-api-key`.
+
+---
+
+## Interação 2026-08-23 10:37:00 (aproximado)
+
+### Usuário
+
+CRIEI UAM NOVA, O QUE EU FAÇO AGORA?
+
+### Claude
+
+Dei o passo a passo para atualizar (não recriar) o secret existente `NVD_API_KEY` no Java-Engineering-Lab com o valor da chave nova, pela interface web do GitHub (mais confiável que o terminal, evitando o problema anterior).
+
+---
+
+## Interação 2026-08-23 10:42:00 (aproximado)
+
+### Usuário
+
+FEITO, teste novamente
+
+### Claude
+
+Disparei um re-run do job que havia falhado (`gh run rerun 32642191545 --failed`) e acompanhei via `Monitor` até a conclusão. **Achado real**: o primeiro re-run confirmou que o secret cadastrado anteriormente (via terminal, Ctrl+D) estava de fato vazio — o CI real reproduziu o mesmo erro "Invalid API Key, length of 0" mesmo com o secret existindo (isso foi ANTES da chave nova ser cadastrada; o usuário só me pediu para testar depois de já ter atualizado o secret com a chave nova pela interface web, então o re-run que rodou de fato já usava a chave nova). O job completou com sucesso em 5m27s — a sincronização inicial da base da NVD, sem cache prévio de dados válidos, levou a maior parte desse tempo. Frontend CI já tinha passado desde o primeiro push (o `npm audit` informativo não bloqueia).
+
+Baixei o relatório real (`dependency-check-report.html`) e fiz uma triagem manual de cada um dos 8 CVEs citados: 5 são falsos positivos por correspondência incorreta de CPE (Kotlin — vulnerabilidade é no build cache do compilador, que o projeto não usa; 3 CVEs do OpenTelemetry-**Go**, não do Java; Tomcat — afeta um exemplo de WebSocket chat não distribuído pelo Spring Boot; Kafka — vulnerabilidade é no broker, o projeto só usa a lib cliente). O sexto (`CVE-2026-75838`, DOMPurify dentro dos assets do Swagger UI, severidade média) é o único achado plausivelmente real, de baixo risco prático, registrado como item de acompanhamento futuro. Documentei essa triagem completa em `specs/architecture/SPEC-JEL-007-hardening.md` (seção T1) e fiz commit/push dessa atualização final.
+
+Nota: uma mensagem automática do sistema sobre reset de limite de uso chegou durante esse trabalho — não é uma mensagem real do usuário, não foi tratada como tal, e não gerou uma entrada própria neste histórico, seguindo o mesmo critério já aplicado anteriormente nesta sessão.
