@@ -5,6 +5,7 @@ import { BadgeStatusLaboratorio } from "@/componentes/BadgeStatusLaboratorio";
 import { ConteudoLaboratorioN1 } from "@/componentes/ConteudoLaboratorioN1";
 import { ConteudoLaboratorioRace } from "@/componentes/ConteudoLaboratorioRace";
 import { ConteudoLaboratorioKafka } from "@/componentes/ConteudoLaboratorioKafka";
+import { ConteudoLaboratorioConnPool } from "@/componentes/ConteudoLaboratorioConnPool";
 import { buscarLaboratorioPorId } from "@/lib/laboratorios";
 
 export async function generateMetadata({
@@ -77,6 +78,10 @@ export default async function PaginaLaboratorio({
 
         {laboratorio.status === "DISPONIVEL" && laboratorio.id === "kafka-idempotencia" && (
           <ConteudoLaboratorioKafka />
+        )}
+
+        {laboratorio.status === "DISPONIVEL" && laboratorio.id === "connection-pool-exhaustion" && (
+          <ConteudoLaboratorioConnPool />
         )}
       </main>
     </div>

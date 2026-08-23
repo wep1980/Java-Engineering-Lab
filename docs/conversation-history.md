@@ -2338,3 +2338,19 @@ quais laboratórios do backlog fazem mais sentido implementar primeiro?
 ### Claude
 
 Pergunta exploratória — respondi com uma recomendação objetiva (Connection Pool Exhaustion ou LazyInitializationException como próximos candidatos, por reaproveitarem 100% da infraestrutura já existente sem exigir novo serviço no `docker-compose.yml`) e o principal trade-off (labs que dependem de Redis, como Cache Stampede/Cache inconsistente, exigiriam subir um novo profile antes de começar), deixando claro que é uma sugestão a ser redirecionada pelo usuário, não uma decisão tomada — nenhuma implementação foi iniciada.
+
+---
+
+## Interação 2026-08-23 14:11:53
+
+### Usuário
+
+Connection Pool Exhaustion — pode começar
+
+### Claude
+
+Escrevi `specs/labs/SPEC-LAB-CONN-POOL-001-connection-pool-exhaustion.md` seguindo o mesmo padrão das SPECs de laboratório anteriores, e implementei por completo: backend (pacote `laboratorios.connpool`) com três variantes — `pool-pequeno` (problemática, pool de 2 conexões segurando a conexão durante um trabalho lento simulado de 500ms), `pool-redimensionado` (corrigida ingênua, pool de 12), `conexao-curta` (corrigida real, mesmo pool pequeno de 2, mas o trabalho lento acontece antes de obter a conexão); endpoint `POST /api/laboratorios/connection-pool-exhaustion/execucoes/{variante}`; registro no catálogo e no conhecimento do Assistente de IA; frontend com painel de execução e página de conteúdo educacional, seguindo exatamente os padrões já estabelecidos nos laboratórios anteriores.
+
+**Achado real durante a implementação**: a primeira versão registrava os dois pools de demonstração como `@Bean HikariDataSource` avulsos — isso quebrou silenciosamente a criação do `entityManagerFactory` do JPA para **todos** os laboratórios (não só este), porque a autoconfiguração do JPA exige um único candidato de `DataSource` no contexto e, com 3 beans desse tipo sem nenhum `@Primary`, desistiu de criar o bean. Só descobri isso rodando o teste de integração real (não apareceu na compilação). Corrigi construindo os pools diretamente no construtor do serviço, a partir de `JdbcConnectionDetails` (que não é do tipo `DataSource`), documentado em `docs/decisions/0009-pools-de-demonstracao-nao-sao-beans-de-datasource.md`.
+
+Validação real completa: 29/29 testes do backend passando (5 novos: 2 de controller, 3 de integração com Testcontainers confirmando que `pool-pequeno` gera falhas reais por timeout e as duas corrigidas não geram nenhuma); `npm run build`/`lint` sem erros; execução real via `curl` (`pool-pequeno` → 4 sucessos/6 falhas em 1004ms; `pool-redimensionado` → 10/0 em 504ms; `conexao-curta` → 10/0 em **505ms**, praticamente empatada usando 6× menos conexões — reforça com números reais que a correção "certa" não é mais lenta); isolamento do pool principal confirmado disparando esse laboratório em paralelo com o de N+1, que respondeu normalmente; validação visual real no Chrome com as três variantes clicadas e os números/cores corretos na tela. Atualizei toda a documentação (SPEC com evidências, roadmap, links, testing-guide, README) e vou commitar e enviar tudo a seguir.

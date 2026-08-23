@@ -30,6 +30,12 @@ public class CatalogoLaboratoriosService {
                     "Kafka / Mensagem Duplicada / Idempotência",
                     "Demonstrar entrega duplicada real no Kafka e a diferença entre semântica de entrega, processamento idempotente e efeito de negócio.",
                     StatusLaboratorio.DISPONIVEL
+            ),
+            new LaboratorioResumo(
+                    "connection-pool-exhaustion",
+                    "Connection Pool Exhaustion",
+                    "Demonstrar o esgotamento do pool de conexões sob concorrência real, e por que reduzir o tempo de retenção da conexão costuma ser mais eficaz que apenas aumentar o tamanho do pool.",
+                    StatusLaboratorio.DISPONIVEL
             )
     );
 

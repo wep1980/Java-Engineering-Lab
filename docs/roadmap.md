@@ -17,8 +17,9 @@
 | 6 | Observabilidade consolidada | **Concluída** (2026-08-23) | Logs estruturados, Prometheus/Grafana e tracing distribuído (Tempo) — `SPEC-JEL-005` |
 | 7 | Engineering AI Assistant | **Concluída** (2026-08-23) | Assistente de IA (Ollama, modelo local) com contexto real do laboratório — `SPEC-JEL-006` |
 | 8 | Hardening | **Concluída** (2026-08-23) | Dependency-Check + npm audit no CI, JaCoCo, SonarQube validado (3 bugs reais corrigidos), teste de carga real, UX (404/títulos), LICENSE/CONTRIBUTING/CODE_OF_CONDUCT — `SPEC-JEL-007` |
+| — | Laboratório Connection Pool Exhaustion | **Concluída** (2026-08-23) | Primeiro item implementado do backlog pós-Fase 8 — `SPEC-LAB-CONN-POOL-001` |
 
-## Backlog de laboratórios futuros (pós Fase 5)
+## Backlog de laboratórios futuros
 
 Ordem não definida — cada um exige sua própria SPEC (`SPEC-LAB-<CODIGO>-001`)
 antes de implementação, conforme `docs/decisions/0003-ids-de-spec.md`:
@@ -28,7 +29,7 @@ antes de implementação, conforme `docs/decisions/0003-ids-de-spec.md`:
 3. Cartesian Product
 4. Query sem índice
 5. Deadlock
-6. Connection Pool Exhaustion
+6. ~~Connection Pool Exhaustion~~ — implementado, ver `SPEC-LAB-CONN-POOL-001`
 7. Transactional Outbox (ver seção 27 do prompt mestre)
 8. Ordenação de eventos
 9. Circuit Breaker

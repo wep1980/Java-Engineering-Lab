@@ -44,7 +44,19 @@ public class ConhecimentoLaboratorios {
                     aplicar o efeito. Diferença importante: semântica de entrega (quantas \
                     vezes o Kafka entrega) é diferente de processamento idempotente \
                     (detectar e ignorar repetição) que é diferente de efeito de negócio \
-                    (o que realmente aconteceu no domínio)."""
+                    (o que realmente aconteceu no domínio).""",
+            "connection-pool-exhaustion", """
+                    Laboratório de Connection Pool Exhaustion: a aplicação segura uma \
+                    conexão de banco durante um trabalho lento que não precisava dela \
+                    (ex.: chamada externa, processamento pesado) -- sob concorrência, o \
+                    pool (recurso finito) esgota antes do esperado e requisições falham \
+                    por timeout esperando uma conexão livre, mesmo com o banco saudável e \
+                    ocioso. Correção ingênua: aumentar o pool -- funciona, mas não escala \
+                    (cada conexão a mais custa memória na aplicação e no banco, que também \
+                    tem limite). Correção que realmente escala: reduzir o tempo de \
+                    retenção da conexão -- fazer o trabalho lento FORA do escopo em que a \
+                    conexão está aberta. O laboratório prova isso mantendo o MESMO pool \
+                    pequeno e apenas reordenando quando a conexão é obtida."""
     );
 
     public String buscar(String laboratorioId) {

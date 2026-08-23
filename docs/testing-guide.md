@@ -224,6 +224,42 @@ Detalhamento completo de cada achado (incluindo os 4 bugs reais do
 SonarQube, com arquivo/linha/regra) está em
 `specs/architecture/SPEC-JEL-007-hardening.md`.
 
+## Validação do laboratório de Connection Pool Exhaustion (2026-08-23)
+
+Pré-requisito: backend rodando com PostgreSQL real. Os pools de
+demonstração são isolados e construídos pelo próprio serviço — nenhum
+profile ou serviço adicional é necessário.
+
+| Endpoint | Método | Cenário | Resultado esperado |
+|---|---|---|---|
+| `/api/laboratorios/connection-pool-exhaustion/execucoes/pool-pequeno` | POST | Pool pequeno (2), segura a conexão | `200`, `metricas.quantidadeFalhasPorTimeout > 0` |
+| `/api/laboratorios/connection-pool-exhaustion/execucoes/pool-redimensionado` | POST | Pool maior (12), mesmo código | `200`, `metricas.quantidadeFalhasPorTimeout: 0`, `metricas.quantidadeSucesso: 10` |
+| `/api/laboratorios/connection-pool-exhaustion/execucoes/conexao-curta` | POST | Pool pequeno (2), conexão obtida só para a consulta | `200`, `metricas.quantidadeFalhasPorTimeout: 0`, `metricas.quantidadeSucesso: 10` |
+| `/api/laboratorios/connection-pool-exhaustion/execucoes/inexistente` | POST | Variante inválida | `400`, formato de erro padrão |
+
+Validações executadas:
+- Testes de integração com Testcontainers e concorrência real
+  (`ExecucaoConnPoolServiceIntegrationTest`, 3 testes). Suíte completa
+  do backend: 29/29 testes.
+- **Bug real encontrado e corrigido durante a implementação** (não
+  pelos testes automatizados, pela execução real do primeiro teste de
+  integração): registrar os pools de demonstração como
+  `@Bean HikariDataSource` avulsos quebrava a criação do
+  `entityManagerFactory` do JPA para **todos** os laboratórios — ver
+  `docs/decisions/0009-pools-de-demonstracao-nao-sao-beans-de-datasource.md`.
+- Os 4 cenários validados manualmente com `curl` contra o Docker
+  Compose real. Números reais observados: `pool-pequeno` → 4
+  sucessos/6 falhas (1004ms); `pool-redimensionado` → 10/0 (504ms);
+  `conexao-curta` → 10/0 (505ms — praticamente empatada com o pool
+  redimensionado, usando só 2 conexões em vez de 12).
+- **Isolamento validado de propósito**: uma execução de `pool-pequeno`
+  (gerando falhas reais) disparada em paralelo com uma execução do
+  laboratório de N+1 — o N+1 respondeu normalmente em 57ms, confirmando
+  que o pool de demonstração não afeta o resto da plataforma.
+- Painel interativo em `/laboratorios/connection-pool-exhaustion`
+  validado no Chrome: as três variantes disparam execuções reais, com
+  "Falhas por timeout" em vermelho quando `> 0` e verde quando `0`.
+
 ## Preenchimento futuro (por fase)
 
 - **Fase 2/3**: pré-requisitos de ambiente, ordem de subida dos serviços

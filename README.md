@@ -7,14 +7,14 @@ Repositório: https://github.com/wep1980/Java-Engineering-Lab
 > entrevistas) de aplicações Java/Spring: N+1, race conditions,
 > mensageria duplicada, e outros.
 
-**Status atual: Fase 8 — Hardening concluída.** Três laboratórios
-completos, logs estruturados, métricas (Prometheus/Grafana), tracing
-distribuído (OpenTelemetry/Tempo), um assistente de IA (Ollama, modelo
-local) com contexto real de cada laboratório, análise de qualidade
-estática (SonarQube) e de dependências (OWASP Dependency-Check/npm
-audit), cobertura de testes (JaCoCo) e um teste de carga real
-comparando as variantes do laboratório de N+1 sob concorrência — tudo
-validado contra infraestrutura real. Veja
+**Status atual: quatro laboratórios completos, pós-Fase 8 (Hardening).**
+Logs estruturados, métricas (Prometheus/Grafana), tracing distribuído
+(OpenTelemetry/Tempo), um assistente de IA (Ollama, modelo local) com
+contexto real de cada laboratório, análise de qualidade estática
+(SonarQube) e de dependências (OWASP Dependency-Check/npm audit),
+cobertura de testes (JaCoCo) e um teste de carga real comparando as
+variantes do laboratório de N+1 sob concorrência — tudo validado contra
+infraestrutura real. Veja
 [Estado atual do projeto](#estado-atual-do-projeto).
 
 ## Por que este projeto existe
@@ -50,6 +50,7 @@ introdução → arquitetura → executar problema → observar → diagnosticar
 | N+1 Queries | **Disponível** — `/laboratorios/n1-queries`, 4 variantes executáveis com métricas reais (`specs/labs/SPEC-LAB-N1-001-n-mais-um-queries.md`) |
 | Race Condition / Lost Update | **Disponível** — `/laboratorios/race-condition`, 3 variantes com concorrência real (`specs/labs/SPEC-LAB-RACE-001-race-condition-lost-update.md`) |
 | Kafka / Mensagem Duplicada / Idempotência | **Disponível** — `/laboratorios/kafka-idempotencia`, 2 variantes com Kafka real (`specs/labs/SPEC-LAB-KAFKA-IDEMP-001-mensagem-duplicada-idempotencia.md`) |
+| Connection Pool Exhaustion | **Disponível** — `/laboratorios/connection-pool-exhaustion`, 3 variantes com pools HikariCP isolados e concorrência real (`specs/labs/SPEC-LAB-CONN-POOL-001-connection-pool-exhaustion.md`) |
 | Demais laboratórios do backlog | Ver `docs/roadmap.md` |
 
 ## Stack
@@ -214,8 +215,20 @@ N+1), performance (teste de carga real comparando as variantes do
 laboratório de N+1 sob concorrência — a versão corrigida sustentou de
 2,9× a 6,1× mais throughput), UX (página 404 em português, título por
 página de laboratório) e documentação final (`LICENSE` MIT,
-`CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`). Os laboratórios futuros do
-backlog seguem pendentes de aprovação antes de começar (ver
+`CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`). Como primeiro item do backlog
+pós-Fase 8, foi implementado o laboratório de Connection Pool
+Exhaustion (`SPEC-LAB-CONN-POOL-001`): dois pools HikariCP dedicados e
+isolados do pool principal da aplicação demonstram esgotamento real sob
+concorrência (`SQLTransientConnectionException` real, não fabricada) e
+comparam duas correções — aumentar o pool vs. reduzir o tempo de
+retenção da conexão, sendo a segunda tão rápida quanto a primeira
+mesmo usando 6× menos conexões. Um achado real durante a implementação
+(registrar os pools como beans de `DataSource` quebrava silenciosamente
+a criação do `entityManagerFactory` do JPA para todos os laboratórios)
+foi corrigido e documentado em
+`docs/decisions/0009-pools-de-demonstracao-nao-sao-beans-de-datasource.md`.
+Os demais laboratórios futuros do backlog seguem pendentes de aprovação
+antes de começar (ver
 `docs/roadmap.md`).
 
 ## Licença
