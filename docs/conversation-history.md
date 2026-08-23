@@ -2381,4 +2381,16 @@ Escrevi `specs/labs/SPEC-LAB-DEADLOCK-001-deadlock.md` e implementei por complet
 
 **Dois achados reais durante a implementação**: (1) esqueci de criar o `ApplicationRunner` que popula as contas de demonstração na subida real da aplicação — os testes automatizados passavam porque chamavam o seed manualmente, mas `docker compose up` real retornava 500; corrigido criando `InicializadorDadosDeadlock`, seguindo o mesmo padrão já usado no laboratório de Race Condition. (2) O teste de integração real confirmou um deadlock genuíno do PostgreSQL no log: `ERROR: deadlock detected — Process 62 waits for ShareLock... blocked by process 63. Process 63 waits for ShareLock... blocked by process 62.`
 
-Validação real completa: 33/33 testes do backend (4 novos: 2 de controller, 2 de integração com Testcontainers); `npm run build`/`lint` sem erros; execução real via `curl` (`sem-ordem-consistente` → 1 sucesso/1 deadlock real, saldos R$450/R$550; `ordem-consistente` → 2 sucessos/0 deadlocks, saldos de volta a R$500/R$500 — as duas transferências opostas se cancelaram); não-determinismo do "vencedor" do deadlock confirmado de propósito (execuções diferentes produziram vencedores diferentes); isolamento do restante da plataforma confirmado (N+1 respondeu normalmente em 51ms durante um deadlock real); validação visual real no Chrome com as duas variantes clicadas. Atualizei toda a documentação (SPEC com evidências, roadmap, links, testing-guide, README) e vou commitar e enviar tudo a seguir.
+Validação real completa: 33/33 testes do backend (4 novos: 2 de controller, 2 de integração com Testcontainers); `npm run build`/`lint` sem erros; execução real via `curl` (`sem-ordem-consistente` → 1 sucesso/1 deadlock real, saldos R$450/R$550; `ordem-consistente` → 2 sucessos/0 deadlocks, saldos de volta a R$500/R$500 — as duas transferências opostas se cancelaram); não-determinismo do "vencedor" do deadlock confirmado de propósito (execuções diferentes produziram vencedores diferentes); isolamento do restante da plataforma confirmado (N+1 respondeu normalmente em 51ms durante um deadlock real); validação visual real no Chrome com as duas variantes clicadas. Atualizei toda a documentação (SPEC com evidências, roadmap, links, testing-guide, README), comitei e enviei tudo — Backend CI e Frontend CI passaram no `master`.
+
+---
+
+## Interação 2026-08-23 19:56:08
+
+### Usuário
+
+próximo do backlog, mesmo critério
+
+### Claude
+
+Pergunta exploratória — recomendei "Query sem índice" (`EXPLAIN ANALYZE` real mostrando seq scan vs. index scan, com diferença de tempo real e mensurável, zero infraestrutura nova), com o trade-off principal frente à alternativa mais próxima (Cartesian Product — também zero infra nova, mas ainda dentro da mesma família de "fetching de coleções JPA" já coberta três vezes entre N+1/Race/Eager Fetching; indexação é território totalmente novo, diversifica o portfólio de laboratórios), deixando claro que é uma sugestão a ser redirecionada — nenhuma implementação foi iniciada.
