@@ -2325,4 +2325,16 @@ Disparei um re-run do job que havia falhado (`gh run rerun 32642191545 --failed`
 
 Baixei o relatório real (`dependency-check-report.html`) e fiz uma triagem manual de cada um dos 8 CVEs citados: 5 são falsos positivos por correspondência incorreta de CPE (Kotlin — vulnerabilidade é no build cache do compilador, que o projeto não usa; 3 CVEs do OpenTelemetry-**Go**, não do Java; Tomcat — afeta um exemplo de WebSocket chat não distribuído pelo Spring Boot; Kafka — vulnerabilidade é no broker, o projeto só usa a lib cliente). O sexto (`CVE-2026-75838`, DOMPurify dentro dos assets do Swagger UI, severidade média) é o único achado plausivelmente real, de baixo risco prático, registrado como item de acompanhamento futuro. Documentei essa triagem completa em `specs/architecture/SPEC-JEL-007-hardening.md` (seção T1) e fiz commit/push dessa atualização final.
 
-Nota: uma mensagem automática do sistema sobre reset de limite de uso chegou durante esse trabalho — não é uma mensagem real do usuário, não foi tratada como tal, e não gerou uma entrada própria neste histórico, seguindo o mesmo critério já aplicado anteriormente nesta sessão.
+Nota: uma mensagem automática do sistema sobre reset de limite de uso chegou durante esse trabalho — não é uma mensagem real do usuário, não foi tratada como tal, e não gerou uma entrada própria neste histórico, seguindo o mesmo critério já aplicado anteriormente nesta sessão. Encerrei o turno com um resumo final da Fase 8 completa para o usuário.
+
+---
+
+## Interação 2026-08-23 13:26:10
+
+### Usuário
+
+quais laboratórios do backlog fazem mais sentido implementar primeiro?
+
+### Claude
+
+Pergunta exploratória — respondi com uma recomendação objetiva (Connection Pool Exhaustion ou LazyInitializationException como próximos candidatos, por reaproveitarem 100% da infraestrutura já existente sem exigir novo serviço no `docker-compose.yml`) e o principal trade-off (labs que dependem de Redis, como Cache Stampede/Cache inconsistente, exigiriam subir um novo profile antes de começar), deixando claro que é uma sugestão a ser redirecionada pelo usuário, não uma decisão tomada — nenhuma implementação foi iniciada.
