@@ -7,7 +7,7 @@ Repositório: https://github.com/wep1980/Java-Engineering-Lab
 > entrevistas) de aplicações Java/Spring: N+1, race conditions,
 > mensageria duplicada, e outros.
 
-**Status atual: quatro laboratórios completos, pós-Fase 8 (Hardening).**
+**Status atual: cinco laboratórios completos, pós-Fase 8 (Hardening).**
 Logs estruturados, métricas (Prometheus/Grafana), tracing distribuído
 (OpenTelemetry/Tempo), um assistente de IA (Ollama, modelo local) com
 contexto real de cada laboratório, análise de qualidade estática
@@ -51,6 +51,7 @@ introdução → arquitetura → executar problema → observar → diagnosticar
 | Race Condition / Lost Update | **Disponível** — `/laboratorios/race-condition`, 3 variantes com concorrência real (`specs/labs/SPEC-LAB-RACE-001-race-condition-lost-update.md`) |
 | Kafka / Mensagem Duplicada / Idempotência | **Disponível** — `/laboratorios/kafka-idempotencia`, 2 variantes com Kafka real (`specs/labs/SPEC-LAB-KAFKA-IDEMP-001-mensagem-duplicada-idempotencia.md`) |
 | Connection Pool Exhaustion | **Disponível** — `/laboratorios/connection-pool-exhaustion`, 3 variantes com pools HikariCP isolados e concorrência real (`specs/labs/SPEC-LAB-CONN-POOL-001-connection-pool-exhaustion.md`) |
+| Deadlock | **Disponível** — `/laboratorios/deadlock`, 2 variantes com deadlock real detectado pelo PostgreSQL (`specs/labs/SPEC-LAB-DEADLOCK-001-deadlock.md`) |
 | Demais laboratórios do backlog | Ver `docs/roadmap.md` |
 
 ## Stack
@@ -227,8 +228,22 @@ mesmo usando 6× menos conexões. Um achado real durante a implementação
 a criação do `entityManagerFactory` do JPA para todos os laboratórios)
 foi corrigido e documentado em
 `docs/decisions/0009-pools-de-demonstracao-nao-sao-beans-de-datasource.md`.
-Os demais laboratórios futuros do backlog seguem pendentes de aprovação
-antes de começar (ver
+Como segundo item do backlog, foi implementado o laboratório de
+Deadlock (`SPEC-LAB-DEADLOCK-001`): duas transferências reais e
+concorrentes entre duas contas, em direções opostas, travando locks em
+ordens opostas — o PostgreSQL detecta ativamente a espera circular e
+aborta uma das duas transações com um erro real (`deadlock detected`,
+confirmado no log da própria execução de teste). A correção —
+ordenar a aquisição de locks de forma consistente (por ID, não pela
+direção da transferência) — elimina matematicamente a possibilidade de
+deadlock, validado com as duas transferências opostas se cancelando
+(saldo final igual ao inicial). Durante a validação contra o Docker
+Compose real (não os testes automatizados), foi encontrado e corrigido
+mais um achado real: faltava o inicializador que popula as contas de
+demonstração na subida da aplicação — mesma lição já registrada nas
+ADRs anteriores sobre a importância de validar contra infraestrutura
+real. Os demais laboratórios futuros do backlog seguem pendentes de
+aprovação antes de começar (ver
 `docs/roadmap.md`).
 
 ## Licença

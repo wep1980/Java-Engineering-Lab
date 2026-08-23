@@ -260,6 +260,41 @@ Validações executadas:
   validado no Chrome: as três variantes disparam execuções reais, com
   "Falhas por timeout" em vermelho quando `> 0` e verde quando `0`.
 
+## Validação do laboratório de Deadlock (2026-08-23)
+
+Pré-requisito: backend rodando com PostgreSQL real.
+
+| Endpoint | Método | Cenário | Resultado esperado |
+|---|---|---|---|
+| `/api/laboratorios/deadlock/execucoes/sem-ordem-consistente` | POST | Locks travados em ordens opostas | `200`, `metricas.quantidadeDeadlocksDetectados: 1`, `metricas.quantidadeSucesso: 1` |
+| `/api/laboratorios/deadlock/execucoes/ordem-consistente` | POST | Locks sempre em ordem ascendente de ID | `200`, `metricas.quantidadeDeadlocksDetectados: 0`, `metricas.quantidadeSucesso: 2` |
+| `/api/laboratorios/deadlock/execucoes/inexistente` | POST | Variante inválida | `400`, formato de erro padrão |
+
+Validações executadas:
+- **Bug real encontrado e corrigido durante a validação via Docker
+  Compose** (não pelos testes automatizados): faltava o
+  `ApplicationRunner` que popula as contas de demonstração na subida
+  real da aplicação — o endpoint respondia `500` até ser corrigido.
+- Testes de integração com Testcontainers e concorrência real
+  (`ExecucaoDeadlockServiceIntegrationTest`, 2 testes) — o log da
+  própria execução mostrou o deadlock real detectado pelo PostgreSQL
+  (`ERROR: deadlock detected`). Suíte completa do backend: 33/33
+  testes.
+- Os 3 cenários validados manualmente com `curl` contra o Docker
+  Compose real. Números reais observados: `sem-ordem-consistente` → 1
+  sucesso/1 deadlock, saldos R$450/R$550 (580ms); `ordem-consistente` →
+  2 sucessos/0 deadlocks, saldos de volta a R$500/R$500 (630ms).
+- **Não-determinismo do vencedor confirmado de propósito**: execuções
+  diferentes produziram vencedores diferentes (ora a transferência
+  A→B, ora a B→A) — confirma que qual transação o PostgreSQL aborta
+  não é previsível, validado explicitamente em vez de presumido.
+- **Isolamento validado**: uma execução de `sem-ordem-consistente`
+  (produzindo o deadlock) disparada em paralelo com uma execução do
+  laboratório de N+1, que respondeu normalmente em 51ms.
+- Painel interativo em `/laboratorios/deadlock` validado no Chrome: as
+  duas variantes disparam execuções reais, com "Deadlocks (REAL)" em
+  vermelho quando `> 0` e verde quando `0`.
+
 ## Preenchimento futuro (por fase)
 
 - **Fase 2/3**: pré-requisitos de ambiente, ordem de subida dos serviços

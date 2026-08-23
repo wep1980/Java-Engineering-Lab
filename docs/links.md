@@ -29,6 +29,8 @@ Subindo com `docker compose --profile core up --build` (após copiar
 | Execução do laboratório Race Condition (API) | `POST http://localhost:8080/api/laboratorios/race-condition/execucoes/{variante}` | `variante`: `sem-controle`, `otimista`, `pessimista` — validado, `origemDados: REAL` |
 | Laboratório de Connection Pool Exhaustion (frontend) | http://localhost:3000/laboratorios/connection-pool-exhaustion | Validado no navegador (2026-08-23) — 3 variantes, pools de demonstração isolados do pool principal |
 | Execução do laboratório Connection Pool Exhaustion (API) | `POST http://localhost:8080/api/laboratorios/connection-pool-exhaustion/execucoes/{variante}` | `variante`: `pool-pequeno`, `pool-redimensionado`, `conexao-curta` — validado, `origemDados: REAL` |
+| Laboratório de Deadlock (frontend) | http://localhost:3000/laboratorios/deadlock | Validado no navegador (2026-08-23) — 2 variantes, deadlock real detectado pelo PostgreSQL |
+| Execução do laboratório Deadlock (API) | `POST http://localhost:8080/api/laboratorios/deadlock/execucoes/{variante}` | `variante`: `sem-ordem-consistente`, `ordem-consistente` — validado, `origemDados: REAL` |
 | Health-check do backend | http://localhost:8080/actuator/health | Validado retornando `{"status":"UP"}` |
 | Swagger UI | http://localhost:8080/swagger-ui/index.html | Validado retornando `200` |
 | OpenAPI (JSON) | http://localhost:8080/v3/api-docs | Validado retornando `200` |

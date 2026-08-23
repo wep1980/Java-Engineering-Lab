@@ -56,7 +56,19 @@ public class ConhecimentoLaboratorios {
                     tem limite). Correção que realmente escala: reduzir o tempo de \
                     retenção da conexão -- fazer o trabalho lento FORA do escopo em que a \
                     conexão está aberta. O laboratório prova isso mantendo o MESMO pool \
-                    pequeno e apenas reordenando quando a conexão é obtida."""
+                    pequeno e apenas reordenando quando a conexão é obtida.""",
+            "deadlock", """
+                    Laboratório de Deadlock: duas transferências concorrentes entre as \
+                    mesmas duas contas, em direções opostas, cada uma trava com sucesso \
+                    uma conta e espera indefinidamente pela outra, que a outra \
+                    transferência já travou -- espera circular. Diferente de Lost Update \
+                    (falha silenciosa), o PostgreSQL detecta ativamente o ciclo e aborta \
+                    uma das duas transações com um erro real (deadlock detected / \
+                    CannotAcquireLockException). Solução: ordenar a aquisição de locks de \
+                    forma consistente (por ID da conta, independente da direção da \
+                    transferência) -- elimina matematicamente a espera circular, porque as \
+                    duas transferências concorrentes sempre disputam a mesma conta \
+                    primeiro, nunca em ordens opostas."""
     );
 
     public String buscar(String laboratorioId) {

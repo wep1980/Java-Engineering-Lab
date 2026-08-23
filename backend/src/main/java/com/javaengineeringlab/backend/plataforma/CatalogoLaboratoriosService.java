@@ -36,6 +36,12 @@ public class CatalogoLaboratoriosService {
                     "Connection Pool Exhaustion",
                     "Demonstrar o esgotamento do pool de conexões sob concorrência real, e por que reduzir o tempo de retenção da conexão costuma ser mais eficaz que apenas aumentar o tamanho do pool.",
                     StatusLaboratorio.DISPONIVEL
+            ),
+            new LaboratorioResumo(
+                    "deadlock",
+                    "Deadlock",
+                    "Demonstrar um deadlock real de banco de dados por ordem de aquisição de locks inconsistente, e a correção por ordenação consistente.",
+                    StatusLaboratorio.DISPONIVEL
             )
     );
 

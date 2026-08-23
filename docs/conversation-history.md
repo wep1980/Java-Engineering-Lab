@@ -2366,3 +2366,19 @@ próximo do backlog, mesmo critério: Deadlock ou LazyInitializationException
 ### Claude
 
 Pergunta exploratória — recomendei Deadlock, com o trade-off principal (LazyInitializationException reaproveitaria as mesmas entidades do laboratório de N+1, implementação mais rápida, mas é conceitualmente muito próximo do que já foi coberto — mesma regra de sessão/lazy loading do Hibernate; Deadlock é um domínio de problema novo — múltiplos recursos travados em ordens diferentes — e reaproveita o mesmo padrão de concorrência real já validado duas vezes, Race Condition e Connection Pool Exhaustion), deixando claro que é uma sugestão a ser redirecionada — nenhuma implementação foi iniciada.
+
+---
+
+## Interação 2026-08-23 14:36:37
+
+### Usuário
+
+Deadlock — pode começar
+
+### Claude
+
+Escrevi `specs/labs/SPEC-LAB-DEADLOCK-001-deadlock.md` e implementei por completo: backend (pacote `laboratorios.deadlock`) com duas contas de demonstração (A e B, R$ 500,00 cada) e duas variantes — `sem-ordem-consistente` (cada transferência trava origem-depois-destino na ordem literal, produzindo travas em ordens opostas entre as duas transferências concorrentes A→B e B→A) e `ordem-consistente` (sempre trava a conta de menor ID primeiro, independente da direção); endpoint `POST /api/laboratorios/deadlock/execucoes/{variante}`; registro no catálogo e no conhecimento do Assistente de IA; frontend com painel de execução e página de conteúdo educacional.
+
+**Dois achados reais durante a implementação**: (1) esqueci de criar o `ApplicationRunner` que popula as contas de demonstração na subida real da aplicação — os testes automatizados passavam porque chamavam o seed manualmente, mas `docker compose up` real retornava 500; corrigido criando `InicializadorDadosDeadlock`, seguindo o mesmo padrão já usado no laboratório de Race Condition. (2) O teste de integração real confirmou um deadlock genuíno do PostgreSQL no log: `ERROR: deadlock detected — Process 62 waits for ShareLock... blocked by process 63. Process 63 waits for ShareLock... blocked by process 62.`
+
+Validação real completa: 33/33 testes do backend (4 novos: 2 de controller, 2 de integração com Testcontainers); `npm run build`/`lint` sem erros; execução real via `curl` (`sem-ordem-consistente` → 1 sucesso/1 deadlock real, saldos R$450/R$550; `ordem-consistente` → 2 sucessos/0 deadlocks, saldos de volta a R$500/R$500 — as duas transferências opostas se cancelaram); não-determinismo do "vencedor" do deadlock confirmado de propósito (execuções diferentes produziram vencedores diferentes); isolamento do restante da plataforma confirmado (N+1 respondeu normalmente em 51ms durante um deadlock real); validação visual real no Chrome com as duas variantes clicadas. Atualizei toda a documentação (SPEC com evidências, roadmap, links, testing-guide, README) e vou commitar e enviar tudo a seguir.

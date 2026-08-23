@@ -6,6 +6,7 @@ import { ConteudoLaboratorioN1 } from "@/componentes/ConteudoLaboratorioN1";
 import { ConteudoLaboratorioRace } from "@/componentes/ConteudoLaboratorioRace";
 import { ConteudoLaboratorioKafka } from "@/componentes/ConteudoLaboratorioKafka";
 import { ConteudoLaboratorioConnPool } from "@/componentes/ConteudoLaboratorioConnPool";
+import { ConteudoLaboratorioDeadlock } from "@/componentes/ConteudoLaboratorioDeadlock";
 import { buscarLaboratorioPorId } from "@/lib/laboratorios";
 
 export async function generateMetadata({
@@ -82,6 +83,10 @@ export default async function PaginaLaboratorio({
 
         {laboratorio.status === "DISPONIVEL" && laboratorio.id === "connection-pool-exhaustion" && (
           <ConteudoLaboratorioConnPool />
+        )}
+
+        {laboratorio.status === "DISPONIVEL" && laboratorio.id === "deadlock" && (
+          <ConteudoLaboratorioDeadlock />
         )}
       </main>
     </div>
