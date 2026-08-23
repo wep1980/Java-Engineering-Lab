@@ -1,7 +1,13 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
+import { PainelAssistenteIA } from "@/componentes/PainelAssistenteIA";
 import { PainelExecucaoKafka } from "@/componentes/PainelExecucaoKafka";
 
 export function ConteudoLaboratorioKafka() {
+  const [ultimoResultado, setUltimoResultado] = useState<Record<string, unknown> | null>(null);
+
   return (
     <div className="flex flex-col gap-10">
       <section className="flex flex-col gap-3">
@@ -28,7 +34,14 @@ export function ConteudoLaboratorioKafka() {
         <h2 className="text-lg font-medium text-black dark:text-zinc-50">
           Execução real
         </h2>
-        <PainelExecucaoKafka laboratorioId="kafka-idempotencia" />
+        <PainelExecucaoKafka laboratorioId="kafka-idempotencia" onResultado={setUltimoResultado} />
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-medium text-black dark:text-zinc-50">
+          Assistente de engenharia
+        </h2>
+        <PainelAssistenteIA laboratorioId="kafka-idempotencia" ultimoResultado={ultimoResultado} />
       </section>
 
       <section className="flex flex-col gap-3">

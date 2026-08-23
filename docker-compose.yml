@@ -41,6 +41,10 @@ services:
       # Idem para o profile "observability" — sem Tempo no ar, a
       # exportação de traces só falha silenciosamente em background.
       OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
+      # Idem para o profile "ai" — sem Ollama no ar, o assistente responde
+      # 503 (ver LaboratorioIndisponivelException), o resto do backend
+      # continua funcionando normalmente.
+      OLLAMA_URL: http://ollama:11434
     ports:
       - "${PORTA_BACKEND:-8080}:8080"
     depends_on:
@@ -119,6 +123,33 @@ services:
       - ./infra/tempo/tempo.yaml:/etc/tempo.yaml:ro
       - tempo-dados:/var/tempo
 
+  # ---------- profile: ai ----------
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["ai", "full"]
+    ports:
+      - "${PORTA_OLLAMA:-11434}:11434"
+    volumes:
+      - ollama-dados:/root/.ollama
+
+  # Baixa o modelo na primeira subida e depois encerra — não é um
+  # serviço de longa duração. Ver docs/links.md para acompanhar o
+  # progresso do download.
+  ollama-modelo:
+    image: curlimages/curl:latest
+    profiles: ["ai", "full"]
+    depends_on:
+      - ollama
+    entrypoint:
+      - sh
+      - -c
+      - |
+        echo "Aguardando o Ollama ficar pronto...";
+        until curl -sf http://ollama:11434/api/tags > /dev/null; do sleep 2; done;
+        echo "Baixando o modelo ${OLLAMA_MODELO:-llama3.2:3b}...";
+        curl -sf http://ollama:11434/api/pull -d "{\"model\":\"${OLLAMA_MODELO:-llama3.2:3b}\"}";
+        echo "Modelo pronto.";
+
   # ---------- profile: quality ----------
   sonarqube:
     image: sonarqube:community
@@ -133,5 +164,6 @@ volumes:
   postgres-dados:
   grafana-dados:
   tempo-dados:
+  ollama-dados:
   sonarqube-dados:
   sonarqube-extensoes:

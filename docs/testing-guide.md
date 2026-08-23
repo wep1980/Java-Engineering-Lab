@@ -167,6 +167,43 @@ corrigidos durante essa validação — detalhados em
 "Percalços técnicos reais". Nenhum deles seria detectável só lendo o
 código ou a configuração.
 
+## Validação do Engineering AI Assistant (Fase 7, 2026-08-23)
+
+Pré-requisito: `docker compose --profile core --profile ai up --build`.
+Na primeira subida, o serviço auxiliar `ollama-modelo` baixa o modelo
+`llama3.2:3b` (~2GB) e encerra sozinho — aguardar antes de testar.
+
+| Endpoint | Método | Cenário | Resultado esperado |
+|---|---|---|---|
+| `/api/laboratorios/{id}/assistente/perguntas` | POST | Pergunta com `ultimoResultado` real | `200`, `{resposta}` com texto real do modelo, referenciando o contexto enviado |
+| `/api/laboratorios/{id}/assistente/perguntas` | POST | `pergunta` em branco | `400`, formato de erro padrão (`@NotBlank`) |
+| `/api/laboratorios/{id}/assistente/perguntas` | POST | Ollama indisponível (profile `ai` fora do ar) | `503`, formato de erro padrão, mensagem citando o profile `ai` |
+
+Validações executadas:
+- Os 3 testes de `AssistenteIAControllerTest` passaram (`mvn test`, 24/24
+  no total do backend).
+- `curl http://localhost:11434/api/tags` confirmou o modelo `llama3.2:3b`
+  efetivamente baixado (2.02 GB).
+- Pergunta real via `curl` direto no backend, com o resultado real de uma
+  execução do laboratório N+1 (51 queries / 50 pedidos) como
+  `ultimoResultado`: resposta real do Ollama, referenciando os números
+  reais e o conceito de N+1 corretamente.
+- Mesma validação repetida através do proxy same-origin do frontend
+  (`frontend/src/app/api/laboratorios/[id]/assistente/perguntas/route.ts`).
+- Painel interativo validado no Chrome em `/laboratorios/n1-queries`:
+  clique real em "Executar versão problemática" → painel do assistente
+  atualiza para "usando o resultado da sua última execução como
+  contexto" → pergunta digitada e enviada pela UI → resposta real do
+  modelo, usando os números exatos da execução exibida na tela.
+- **Regressão validada de propósito**: com `ollama`/`ollama-modelo`
+  parados, o endpoint do assistente respondeu `503` enquanto uma
+  execução do laboratório N+1, no mesmo momento, continuou respondendo
+  `200` normalmente — confirma que o profile `ai` é opcional e isolado
+  do resto da plataforma.
+- `npm run build` e `npm run lint` no frontend, sem erros, após a
+  refatoração que eleva `ultimoResultado` para os três componentes de
+  conteúdo de laboratório.
+
 ## Preenchimento futuro (por fase)
 
 - **Fase 2/3**: pré-requisitos de ambiente, ordem de subida dos serviços

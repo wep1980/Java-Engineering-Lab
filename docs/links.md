@@ -75,6 +75,24 @@ requisição — validado via `docker logs`.
 Sem o profile `observability`, o backend sobe normalmente (a exportação
 de traces apenas falha silenciosamente em background).
 
+## Ambiente local (profiles `core` + `ai`, validado em 2026-08-23)
+
+`docker compose --profile core --profile ai up --build`. Na primeira
+subida, o serviço auxiliar `ollama-modelo` baixa o modelo (~2GB) e
+encerra sozinho — acompanhe com `docker compose logs -f ollama-modelo`.
+
+| Serviço | URL | Observação |
+|---|---|---|
+| Ollama (API) | http://localhost:11434 | Porta configurável via `PORTA_OLLAMA` no `.env`. Validado — `GET /api/tags` retorna `llama3.2:3b` baixado (2.02 GB) |
+| Assistente de IA (API) | `POST http://localhost:8080/api/laboratorios/{id}/assistente/perguntas` | Corpo `{pergunta, ultimoResultado?}`. Validado via `curl` direto no backend e via proxy do frontend — resposta real do modelo, não fabricada |
+| Painel do assistente (frontend) | Embutido em cada página de laboratório (`/laboratorios/n1-queries`, `/laboratorios/race-condition`, `/laboratorios/kafka-idempotencia`) | Validado no navegador — pergunta real respondida usando o resultado real da última execução exibida na tela como contexto |
+
+Sem o profile `ai`, os laboratórios continuam funcionando normalmente
+— validado parando os containers `ollama`/`ollama-modelo` e confirmando
+que uma execução do laboratório N+1 continuou respondendo `200`
+enquanto o endpoint do assistente passou a responder `503` com mensagem
+clara.
+
 ## Profiles ainda não validados em execução
 
 | Serviço | Profile | Status |

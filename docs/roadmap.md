@@ -15,7 +15,7 @@
 | 4 | Laboratório Race Condition / Lost Update | **Concluída** (2026-08-22) | Implementação completa de `SPEC-LAB-RACE-001` |
 | 5 | Laboratório Kafka / Idempotência | **Concluída** (2026-08-22) | Implementação completa de `SPEC-LAB-KAFKA-IDEMP-001` |
 | 6 | Observabilidade consolidada | **Concluída** (2026-08-23) | Logs estruturados, Prometheus/Grafana e tracing distribuído (Tempo) — `SPEC-JEL-005` |
-| 7 | Engineering AI Assistant | Proposta | Assistente de IA com contexto do laboratório |
+| 7 | Engineering AI Assistant | **Concluída** (2026-08-23) | Assistente de IA (Ollama, modelo local) com contexto real do laboratório — `SPEC-JEL-006` |
 | 8 | Hardening | Proposta | Segurança, performance, UX, documentação final, CI/CD completo |
 
 ## Backlog de laboratórios futuros (pós Fase 5)

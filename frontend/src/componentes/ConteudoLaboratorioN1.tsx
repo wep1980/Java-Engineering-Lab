@@ -1,6 +1,12 @@
+"use client";
+
+import { useState } from "react";
+import { PainelAssistenteIA } from "@/componentes/PainelAssistenteIA";
 import { PainelExecucaoN1 } from "@/componentes/PainelExecucaoN1";
 
 export function ConteudoLaboratorioN1() {
+  const [ultimoResultado, setUltimoResultado] = useState<Record<string, unknown> | null>(null);
+
   return (
     <div className="flex flex-col gap-10">
       <section className="flex flex-col gap-3">
@@ -28,7 +34,14 @@ export function ConteudoLaboratorioN1() {
           </code>{" "}
           do próprio Hibernate — instrumentação real, não estimada.
         </p>
-        <PainelExecucaoN1 laboratorioId="n1-queries" />
+        <PainelExecucaoN1 laboratorioId="n1-queries" onResultado={setUltimoResultado} />
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-medium text-black dark:text-zinc-50">
+          Assistente de engenharia
+        </h2>
+        <PainelAssistenteIA laboratorioId="n1-queries" ultimoResultado={ultimoResultado} />
       </section>
 
       <section className="flex flex-col gap-3">

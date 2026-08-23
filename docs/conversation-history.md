@@ -2129,6 +2129,48 @@ Criei `SPEC-JEL-005-observabilidade-consolidada.md` antes do código. Esta fase 
 
 Documentação atualizada: `SPEC-JEL-005` (evidências completas + os 5 percalços), novos ADR-0007, `README.md`, `docs/roadmap.md`, `docs/links.md`, `docs/testing-guide.md`, `docs/observability.md` (deixou de ser só proposta, agora descreve o que está implementado).
 
-Ambiente derrubado ao final, volumes de teste removidos. Vou commitar e subir agora.
+Ambiente derrubado ao final, volumes de teste removidos. Commitei e subi (commit `56c7df6`) e confirmei que os dois workflows de CI passaram no GitHub Actions.
 
 Com isso, as Fases 0-6 do roadmap original estão completas: governança, bootstrap, plataforma base, três laboratórios funcionais (N+1, Race Condition, Kafka/Idempotência) e observabilidade consolidada — tudo validado contra infraestrutura real, não apenas testado em isolamento.
+
+---
+
+## Interação 2026-08-23 08:39:33
+
+### Usuário
+
+avança para a Fase 7
+
+### Claude
+
+Antes de implementar, tentei perguntar via formulário estruturado qual provedor de IA usar (Anthropic Claude, OpenAI, ou Ollama local) e se havia uma chave de API disponível para testar a integração de ponta a ponta — já que a Fase 7 exige uma credencial externa que eu não posso obter sozinho, e a escolha do provedor tem implicações arquiteturais reais (seção 30 do prompt mestre pede uma abstração, não acoplamento a um provedor único).
+
+Você respondeu à primeira pergunta escolhendo **Ollama (modelo local)**, mas rejeitou o formulário antes de responder a segunda, sinalizando que queria esclarecer algo primeiro. Perguntei o quê.
+
+---
+
+## Interação 2026-08-23 08:42:03
+
+### Usuário
+
+eu não entendi para que vamos utilizar IA, me explique
+
+### Claude
+
+Expliquei que o Engineering AI Assistant (seção 29 do prompt mestre) não é um chatbot genérico: é um assistente que recebe o contexto real da execução do usuário em um laboratório (métricas reais, código, descrição) e responde perguntas usando esses dados específicos — não conhecimento solto. Dei exemplos concretos ("Por que essa execução gerou 51 queries?", depois de rodar o N+1; "Por que o @Version resolveu esse Lost Update?", depois do Race Condition). Reforcei que é complementar — a plataforma já funciona sem IA, todo o conteúdo educacional das Fases 3-5 é independente disso — e que por isso perguntei o provedor antes de codar, já que é a primeira fase que exige uma credencial ou infraestrutura externa que só o usuário controla.
+
+---
+
+## Interação 2026-08-23 08:44:46
+
+### Usuário
+
+faz sentido, continua com Ollama
+
+### Claude
+
+Implementei a Fase 7 (Engineering AI Assistant, `SPEC-JEL-006`) por completo, usando Ollama como provedor conforme decidido pelo usuário. Backend: interface `AssistenteIA` (abstração de provedor) implementada por `ClienteOllama` (via `RestClient`, `POST /api/generate` do Ollama, `stream: false`, timeouts generosos), conhecimento condensado por laboratório em `ConhecimentoLaboratorios`, e endpoint `POST /api/laboratorios/{id}/assistente/perguntas` que monta um prompt combinando esse conhecimento com o `ultimoResultado` de execução enviado pelo frontend (sem persistência nova no backend). Novo serviço `ollama` no `docker-compose.yml` (profile `ai`), com um serviço auxiliar que baixa o modelo `llama3.2:3b` na primeira subida. Frontend: painel `PainelAssistenteIA` (pergunta, resposta, histórico em memória) embutido nas três páginas de laboratório, com os painéis de execução (N+1, Race Condition, Kafka) refatorados para expor um callback `onResultado` que alimenta o assistente com o resultado real da última execução exibida na tela.
+
+Validação real, não apenas testes automatizados: os 24 testes do backend passam (incluindo os 3 novos de `AssistenteIAControllerTest`); `npm run build`/`lint` do frontend sem erros; o modelo `llama3.2:3b` confirmado baixado via `curl http://localhost:11434/api/tags`; uma pergunta real (via `curl` direto no backend, via proxy do frontend, e via clique real no navegador Chrome) com o resultado real de uma execução do laboratório N+1 (51 queries/50 pedidos) como contexto recebeu do Ollama uma resposta real explicando corretamente "1 + 50 = 51" com os números exatos da tela — não uma resposta fabricada. Validei também a degradação graciosa: com os containers do Ollama parados, o endpoint do assistente responde `503` (formato padrão de erro) enquanto o restante da plataforma (testado com uma execução do N+1) continua respondendo `200` normalmente, confirmando que o profile `ai` é opcional e isolado. Ambiente encerrado de forma limpa ao final (`docker compose down`).
+
+Atualizei a documentação: `SPEC-JEL-006` com critérios de aceite marcados e uma seção "Evidências de conclusão" detalhando cada validação real; `docs/roadmap.md` (Fase 7 concluída); `docs/links.md` (URLs do profile `ai`); `docs/testing-guide.md` (seção de validação da Fase 7); e `README.md` (status atual, instruções de execução com o profile `ai`, e o parágrafo de estado do projeto). Próximo passo natural: Fase 8 (Hardening), que ainda depende de aprovação explícita do usuário para começar.

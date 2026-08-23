@@ -33,7 +33,12 @@ type EstadoExecucao =
   | { status: "erro"; mensagem: string }
   | { status: "concluido"; resultado: ResultadoExecucao };
 
-export function PainelExecucaoRace({ laboratorioId }: { laboratorioId: string }) {
+type Props = {
+  laboratorioId: string;
+  onResultado?: (resultado: ResultadoExecucao) => void;
+};
+
+export function PainelExecucaoRace({ laboratorioId, onResultado }: Props) {
   const [resultados, setResultados] = useState<Record<ChaveVariante, EstadoExecucao>>({
     "sem-controle": { status: "ocioso" },
     otimista: { status: "ocioso" },
@@ -56,6 +61,7 @@ export function PainelExecucaoRace({ laboratorioId }: { laboratorioId: string })
 
       const resultado: ResultadoExecucao = await resposta.json();
       setResultados((atual) => ({ ...atual, [chave]: { status: "concluido", resultado } }));
+      onResultado?.(resultado);
     } catch (erro) {
       const mensagem = erro instanceof Error ? erro.message : "Erro desconhecido";
       setResultados((atual) => ({ ...atual, [chave]: { status: "erro", mensagem } }));

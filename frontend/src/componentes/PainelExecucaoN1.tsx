@@ -31,7 +31,12 @@ type EstadoExecucao =
   | { status: "erro"; mensagem: string }
   | { status: "concluido"; resultado: ResultadoExecucao };
 
-export function PainelExecucaoN1({ laboratorioId }: { laboratorioId: string }) {
+type Props = {
+  laboratorioId: string;
+  onResultado?: (resultado: ResultadoExecucao) => void;
+};
+
+export function PainelExecucaoN1({ laboratorioId, onResultado }: Props) {
   const [resultados, setResultados] = useState<Record<ChaveVariante, EstadoExecucao>>({
     problematico: { status: "ocioso" },
     "join-fetch": { status: "ocioso" },
@@ -55,6 +60,7 @@ export function PainelExecucaoN1({ laboratorioId }: { laboratorioId: string }) {
 
       const resultado: ResultadoExecucao = await resposta.json();
       setResultados((atual) => ({ ...atual, [chave]: { status: "concluido", resultado } }));
+      onResultado?.(resultado);
     } catch (erro) {
       const mensagem = erro instanceof Error ? erro.message : "Erro desconhecido";
       setResultados((atual) => ({ ...atual, [chave]: { status: "erro", mensagem } }));

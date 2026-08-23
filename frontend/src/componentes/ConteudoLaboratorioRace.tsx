@@ -1,6 +1,12 @@
+"use client";
+
+import { useState } from "react";
+import { PainelAssistenteIA } from "@/componentes/PainelAssistenteIA";
 import { PainelExecucaoRace } from "@/componentes/PainelExecucaoRace";
 
 export function ConteudoLaboratorioRace() {
+  const [ultimoResultado, setUltimoResultado] = useState<Record<string, unknown> | null>(null);
+
   return (
     <div className="flex flex-col gap-10">
       <section className="flex flex-col gap-3">
@@ -20,7 +26,14 @@ export function ConteudoLaboratorioRace() {
         <h2 className="text-lg font-medium text-black dark:text-zinc-50">
           Execução real
         </h2>
-        <PainelExecucaoRace laboratorioId="race-condition" />
+        <PainelExecucaoRace laboratorioId="race-condition" onResultado={setUltimoResultado} />
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-medium text-black dark:text-zinc-50">
+          Assistente de engenharia
+        </h2>
+        <PainelAssistenteIA laboratorioId="race-condition" ultimoResultado={ultimoResultado} />
       </section>
 
       <section className="flex flex-col gap-3">

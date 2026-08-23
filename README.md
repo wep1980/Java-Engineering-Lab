@@ -7,10 +7,11 @@ Repositório: https://github.com/wep1980/Java-Engineering-Lab
 > entrevistas) de aplicações Java/Spring: N+1, race conditions,
 > mensageria duplicada, e outros.
 
-**Status atual: Fase 6 — Observabilidade consolidada.** Três
-laboratórios completos, mais logs estruturados, métricas (Prometheus/
-Grafana) e tracing distribuído (OpenTelemetry/Tempo), todos validados
-contra infraestrutura real. Veja
+**Status atual: Fase 7 — Engineering AI Assistant.** Três laboratórios
+completos, logs estruturados, métricas (Prometheus/Grafana), tracing
+distribuído (OpenTelemetry/Tempo) e um assistente de IA (Ollama, modelo
+local) com contexto real de cada laboratório, tudo validado contra
+infraestrutura real. Veja
 [Estado atual do projeto](#estado-atual-do-projeto).
 
 ## Por que este projeto existe
@@ -85,12 +86,23 @@ Para métricas, logs estruturados e tracing distribuído, o profile
 docker compose --profile core --profile observability up --build
 ```
 
+Para o assistente de IA (contexto real de cada laboratório, respondido
+por um modelo local via Ollama), o profile `ai` — na primeira subida,
+aguarde o download automático do modelo (~2GB):
+
+```bash
+docker compose --profile core --profile ai up --build
+```
+
 - Backend: http://localhost:8080 (health-check em `/actuator/health`,
   Swagger UI em `/swagger-ui/index.html`).
 - Frontend: http://localhost:3000.
 - Kafka UI (com `messaging` ativo): http://localhost:8081.
 - Grafana (com `observability` ativo): http://localhost:3300 — dashboard
   e datasources (Prometheus, Tempo) já provisionados.
+- Ollama (com `ai` ativo): http://localhost:11434. Sem este profile, os
+  laboratórios continuam funcionando normalmente — só o assistente fica
+  indisponível (`503`).
 
 O profile `quality` tem a configuração escrita em `docker-compose.yml`,
 mas só entra em uso quando a Fase 8 existir (ver
@@ -174,9 +186,22 @@ contra infraestrutura real (não só a configuração) encontrou e corrigiu
 cinco problemas reais nessa fase — incluindo uma regressão que travava o
 backend sem o profile `messaging` ativo — documentados em
 `docs/decisions/0007-fallback-de-bootstrap-servers-do-kafka.md` e na
-própria `SPEC-JEL-005`. Os laboratórios futuros do backlog e a Fase 7
-(Engineering AI Assistant) seguem pendentes de aprovação antes de
-começar (ver `docs/roadmap.md`).
+própria `SPEC-JEL-005`. Na Fase 7 (`SPEC-JEL-006`, concluída) foi
+implementado o Engineering AI Assistant: uma interface `AssistenteIA`
+(evitando acoplamento a um único provedor) implementada com Ollama
+(modelo local `llama3.2:3b`, sem custo por token nem chave de API),
+exposta em `POST /api/laboratorios/{id}/assistente/perguntas` e embutida
+como painel de pergunta/resposta nas três páginas de laboratório. O
+contexto enviado ao modelo combina conhecimento condensado do
+laboratório com o resultado real da última execução exibida na tela
+(sem persistência nova no backend). Validado de ponta a ponta: execução
+real de um laboratório, pergunta real digitada no navegador, resposta
+real do modelo referenciando os números exatos da execução — e,
+deliberadamente, a ausência do profile `ai` confirmada como não afetando
+o restante da plataforma (endpoint do assistente responde `503`; os
+demais continuam `200`). Os laboratórios futuros do backlog e a Fase 8
+(Hardening) seguem pendentes de aprovação antes de começar (ver
+`docs/roadmap.md`).
 
 ## Como contribuir
 
