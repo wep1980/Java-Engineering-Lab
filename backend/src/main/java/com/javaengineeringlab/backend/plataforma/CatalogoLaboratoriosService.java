@@ -24,6 +24,12 @@ public class CatalogoLaboratoriosService {
                     "Race Condition / Lost Update",
                     "Demonstrar a perda silenciosa de atualizações sob concorrência real, e as soluções com Optimistic Locking (@Version) e Pessimistic Locking.",
                     StatusLaboratorio.DISPONIVEL
+            ),
+            new LaboratorioResumo(
+                    "kafka-idempotencia",
+                    "Kafka / Mensagem Duplicada / Idempotência",
+                    "Demonstrar entrega duplicada real no Kafka e a diferença entre semântica de entrega, processamento idempotente e efeito de negócio.",
+                    StatusLaboratorio.DISPONIVEL
             )
     );
 

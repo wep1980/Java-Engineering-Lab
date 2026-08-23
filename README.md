@@ -7,10 +7,10 @@ Repositório: https://github.com/wep1980/Java-Engineering-Lab
 > entrevistas) de aplicações Java/Spring: N+1, race conditions,
 > mensageria duplicada, e outros.
 
-**Status atual: Fase 4 — Laboratório de Race Condition concluído.** Dois
-laboratórios completos e executáveis de ponta a ponta, com métricas
-reais contra PostgreSQL — o segundo com concorrência real (threads
-reais). Veja [Estado atual do projeto](#estado-atual-do-projeto).
+**Status atual: Fase 5 — Laboratório de Kafka/Idempotência concluído.**
+Três laboratórios completos e executáveis de ponta a ponta, com métricas
+reais — PostgreSQL, concorrência real (threads) e mensageria real
+(Kafka). Veja [Estado atual do projeto](#estado-atual-do-projeto).
 
 ## Por que este projeto existe
 
@@ -44,7 +44,7 @@ introdução → arquitetura → executar problema → observar → diagnosticar
 |---|---|
 | N+1 Queries | **Disponível** — `/laboratorios/n1-queries`, 4 variantes executáveis com métricas reais (`specs/labs/SPEC-LAB-N1-001-n-mais-um-queries.md`) |
 | Race Condition / Lost Update | **Disponível** — `/laboratorios/race-condition`, 3 variantes com concorrência real (`specs/labs/SPEC-LAB-RACE-001-race-condition-lost-update.md`) |
-| Kafka / Mensagem Duplicada / Idempotência | Planejado — Fase 5 |
+| Kafka / Mensagem Duplicada / Idempotência | **Disponível** — `/laboratorios/kafka-idempotencia`, 2 variantes com Kafka real (`specs/labs/SPEC-LAB-KAFKA-IDEMP-001-mensagem-duplicada-idempotencia.md`) |
 | Demais laboratórios do backlog | Ver `docs/roadmap.md` |
 
 ## Stack
@@ -62,22 +62,29 @@ Detalhes e justificativas em
 
 ## Como executar
 
-O esqueleto do backend e do frontend já existe (Fase 1), mas ainda sem
-nenhuma funcionalidade de laboratório. Para subir o ambiente mínimo
-(frontend + backend + PostgreSQL):
+Para os laboratórios de N+1 e Race Condition (frontend + backend +
+PostgreSQL):
 
 ```bash
 cp .env.example .env
 docker compose --profile core up --build
 ```
 
+Para o laboratório de Kafka/Idempotência, o profile `messaging` também
+precisa estar no ar:
+
+```bash
+docker compose --profile core --profile messaging up --build
+```
+
 - Backend: http://localhost:8080 (health-check em `/actuator/health`,
   Swagger UI em `/swagger-ui/index.html`).
 - Frontend: http://localhost:3000.
+- Kafka UI (com `messaging` ativo): http://localhost:8081.
 
-Os demais profiles (`messaging`, `observability`, `quality`) têm a
-configuração escrita em `docker-compose.yml`, mas só entram em uso quando
-os laboratórios/fases correspondentes existirem (ver
+Os demais profiles (`observability`, `quality`) têm a configuração
+escrita em `docker-compose.yml`, mas só entram em uso quando as fases
+correspondentes existirem (ver
 `specs/architecture/SPEC-JEL-004-bootstrap-de-codigo.md`).
 
 Para desenvolvimento sem Docker:
@@ -142,8 +149,16 @@ reais (`ExecutorService` + barreira de largada), variante sem controle
 perdendo atualizações de forma determinística, e as duas soluções
 (Optimistic Locking com `@Version` e Pessimistic Locking com
 `SELECT ... FOR UPDATE`) validadas por testes de integração com
-Testcontainers. Kafka/Idempotência (Fase 5) segue pendente de aprovação
-antes de começar.
+Testcontainers. Na Fase 5 (`SPEC-LAB-KAFKA-IDEMP-001`, concluída) o
+laboratório de Kafka/Idempotência publica o mesmo evento **duas vezes de
+verdade** em um broker Kafka real (profile `messaging`), com um
+consumidor sem proteção (credita duas vezes) e um consumidor idempotente
+(credita uma única vez via chave de idempotência), validados por testes
+de integração com Testcontainers (Kafka + PostgreSQL simultâneos). Um bug
+real de sincronização foi encontrado e corrigido durante a validação
+manual — ver `docs/decisions/0006-sincronizacao-so-apos-commit-em-listeners.md`.
+Os laboratórios futuros do backlog seguem pendentes de aprovação antes de
+começar (ver `docs/roadmap.md`).
 
 ## Como contribuir
 

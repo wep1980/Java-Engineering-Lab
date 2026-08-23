@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { BadgeStatusLaboratorio } from "@/componentes/BadgeStatusLaboratorio";
 import { ConteudoLaboratorioN1 } from "@/componentes/ConteudoLaboratorioN1";
 import { ConteudoLaboratorioRace } from "@/componentes/ConteudoLaboratorioRace";
+import { ConteudoLaboratorioKafka } from "@/componentes/ConteudoLaboratorioKafka";
 import { buscarLaboratorioPorId } from "@/lib/laboratorios";
 
 export default async function PaginaLaboratorio({
@@ -55,6 +56,10 @@ export default async function PaginaLaboratorio({
 
         {laboratorio.status === "DISPONIVEL" && laboratorio.id === "race-condition" && (
           <ConteudoLaboratorioRace />
+        )}
+
+        {laboratorio.status === "DISPONIVEL" && laboratorio.id === "kafka-idempotencia" && (
+          <ConteudoLaboratorioKafka />
         )}
       </main>
     </div>

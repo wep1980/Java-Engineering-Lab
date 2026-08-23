@@ -29,6 +29,10 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-java_engineering_lab}
       POSTGRES_USER: ${POSTGRES_USER:-jel}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+      # Só existe efetivamente se o profile "messaging" também estiver no
+      # ar; caso contrário o backend sobe normalmente e apenas fica
+      # tentando reconectar em background (ver docs/links.md).
+      KAFKA_BOOTSTRAP_SERVERS: kafka:19092
     ports:
       - "${PORTA_BACKEND:-8080}:8080"
     depends_on:

@@ -17,6 +17,20 @@ spring:
     properties:
       hibernate:
         generate_statistics: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      # Novo grupo consumidor sempre começa do início do tópico — nunca
+      # perde um evento publicado antes da primeira subscrição.
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.javaengineeringlab.backend.laboratorios.kafka
+        spring.json.value.default.type: com.javaengineeringlab.backend.laboratorios.kafka.EventoPagamentoConfirmado
 
 server:
   port: ${PORTA_BACKEND:8080}

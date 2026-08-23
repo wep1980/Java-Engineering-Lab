@@ -37,11 +37,26 @@ porta 8080) e `npm run dev` (frontend, porta 3000 por padrão — o Next.js
 escolhe automaticamente outra porta se a 3000 já estiver em uso por outro
 processo na máquina).
 
+## Ambiente local (profiles `core` + `messaging`, validado em 2026-08-22)
+
+O laboratório de Kafka/idempotência exige os dois profiles juntos:
+`docker compose --profile core --profile messaging up --build`.
+
+| Serviço | URL | Observação |
+|---|---|---|
+| Laboratório de Kafka/Idempotência (frontend) | http://localhost:3000/laboratorios/kafka-idempotencia | Validado no navegador — 2 variantes, evento duplicado real |
+| Execução do laboratório Kafka/Idempotência (API) | `POST http://localhost:8080/api/laboratorios/kafka-idempotencia/execucoes/{variante}` | `variante`: `sem-idempotencia`, `idempotente` — validado, `origemDados: REAL` |
+| Kafka (broker) | localhost:9092 | KRaft, sem Zookeeper — validado (partições atribuídas, tópicos criados) |
+| Kafka UI | http://localhost:8081 | Validado — tópicos `pagamentos-confirmados-sem-idempotencia` e `pagamentos-confirmados-idempotente` visíveis |
+
+Sem o profile `messaging`, o backend sobe normalmente (profile `core`
+sozinho continua funcionando para N+1 e Race Condition) — o endpoint
+deste laboratório responde `503` com mensagem clara em vez de travar.
+
 ## Profiles ainda não validados em execução
 
 | Serviço | Profile | Status |
 |---|---|---|
-| Kafka / Kafka UI | `messaging` | Configuração escrita em `docker-compose.yml`, não validada em execução — entra no laboratório de idempotência (Fase 5) |
 | Prometheus / Grafana | `observability` | Configuração escrita, não validada em execução — consolidada na Fase 6 |
 | SonarQube | `quality` | Configuração escrita, não validada em execução — entra na Fase 8 |
 

@@ -118,6 +118,35 @@ Validações executadas:
   fica vermelho quando há perda e verde quando não há. Sem erros no
   console.
 
+## Validação do laboratório de Kafka/Idempotência (Fase 5, 2026-08-22)
+
+Pré-requisito: backend rodando com PostgreSQL **e Kafka** reais —
+`docker compose --profile core --profile messaging up`. Sem o Kafka no
+ar, o endpoint responde `503` (não trava, não erra genericamente).
+
+| Endpoint | Método | Cenário | Resultado esperado |
+|---|---|---|---|
+| `/api/laboratorios/kafka-idempotencia/execucoes/sem-idempotencia` | POST | Evento duplicado, sem proteção | `200`, `metricas.saldoFinal: 100`, `metricas.quantidadeProcessamentosEfetivos: 2`, `metricas.quantidadeEventosConsumidos: 2` |
+| `/api/laboratorios/kafka-idempotencia/execucoes/idempotente` | POST | Evento duplicado, com deduplicação | `200`, `metricas.saldoFinal: 50`, `metricas.quantidadeProcessamentosEfetivos: 1`, `metricas.quantidadeEventosConsumidos: 2` |
+| `/api/laboratorios/kafka-idempotencia/execucoes/inexistente` | POST | Variante inválida | `400`, formato de erro padrão |
+
+Validações executadas:
+- Testes de integração com Testcontainers (Kafka **e** PostgreSQL reais
+  simultâneos) — `ExecucaoKafkaIdempotenciaServiceIntegrationTest`, 2
+  testes, rodados 3 vezes seguidas sem falha.
+- **Bug real encontrado e corrigido** durante a validação manual (não
+  pelos testes automatizados — ver `docs/decisions/0006-sincronizacao-so-apos-commit-em-listeners.md`):
+  sinalizar conclusão do processamento antes do commit da transação
+  causava leitura de saldo inconsistente. Corrigido e revalidado com 2
+  execuções consecutivas de cada variante, resultado idêntico nas duas.
+- Os 3 cenários da tabela acima validados manualmente com `curl` contra
+  o ambiente Docker Compose real (`core` + `messaging`).
+- Tópicos Kafka confirmados via API do Kafka UI.
+- Painel interativo em `/laboratorios/kafka-idempotencia` validado no
+  Chrome: os dois botões disparam publicação real e dupla do evento; o
+  card de saldo final fica vermelho (sem idempotência) ou verde
+  (idempotente). Sem erros no console.
+
 ## Preenchimento futuro (por fase)
 
 - **Fase 2/3**: pré-requisitos de ambiente, ordem de subida dos serviços

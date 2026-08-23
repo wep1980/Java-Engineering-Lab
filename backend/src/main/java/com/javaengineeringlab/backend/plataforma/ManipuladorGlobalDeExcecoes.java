@@ -24,6 +24,12 @@ public class ManipuladorGlobalDeExcecoes {
         return construirResposta(HttpStatus.BAD_REQUEST, excecao.getMessage(), request);
     }
 
+    @ExceptionHandler(LaboratorioIndisponivelException.class)
+    public ResponseEntity<ErroResposta> tratarLaboratorioIndisponivel(
+            LaboratorioIndisponivelException excecao, HttpServletRequest request) {
+        return construirResposta(HttpStatus.SERVICE_UNAVAILABLE, excecao.getMessage(), request);
+    }
+
     private ResponseEntity<ErroResposta> construirResposta(
             HttpStatus status, String mensagem, HttpServletRequest request) {
         String correlationId = MDC.get(FiltroCorrelationId.CHAVE_MDC);

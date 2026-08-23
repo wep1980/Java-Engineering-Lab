@@ -2060,6 +2060,42 @@ Frontend reaproveitou o proxy genérico já criado na Fase 3 (`app/api/laborator
 
 Documentação atualizada: `SPEC-LAB-RACE-001` (evidências completas), `README.md`, `docs/roadmap.md`, `docs/links.md`, `docs/testing-guide.md`.
 
-Ambiente derrubado ao final, nada ficou rodando. Vou commitar e subir agora.
+Ambiente derrubado ao final, nada ficou rodando. Commitei e subi (commit `3e5180e`) e confirmei que os dois workflows de CI passaram no GitHub Actions, incluindo os testes de concorrência.
 
 **Próximo passo natural**: Fase 5 (Kafka / Mensagem Duplicada / Idempotência), que também depende da sua aprovação.
+
+---
+
+## Interação 2026-08-22 21:18:30
+
+### Usuário
+
+sim, avança para a Fase 5
+
+### Claude
+
+Criei `SPEC-LAB-KAFKA-IDEMP-001-mensagem-duplicada-idempotencia.md` antes do código.
+
+**Domínio**: `Carteira` creditada por um evento `EventoPagamentoConfirmado` publicado **duas vezes de verdade** no mesmo tópico (mesmo `eventoId`) — reprodução real de entrega duplicada (at-least-once), não simulação. Dois tópicos (`pagamentos-confirmados-sem-idempotencia` / `pagamentos-confirmados-idempotente`), cada um com seu próprio `@KafkaListener`, refletindo como a correção acontece na prática (troca-se o consumidor, não se acrescenta um `if`).
+
+**Idempotência**: `RegistroProcessamento` (eventoId com constraint de unicidade) como chave de deduplicação. Expliquei na SPEC por que "verificar-então-inserir" é seguro aqui (o container do Spring Kafka processa uma partição sequencialmente, uma única thread) mas não seria em concorrência HTTP real — contraste direto com o laboratório de Race Condition.
+
+**Sincronização**: cada execução publica o evento duas vezes e usa uma `CountDownLatch` (preparada para 2) para saber quando ambas as mensagens foram consumidas antes de ler o saldo final e responder — não é polling, é sincronização real com o processamento assíncrono. Timeout de 15s mapeado para uma nova exceção `LaboratorioIndisponivelException` (503), caso o profile `messaging` não esteja no ar.
+
+**Percalço técnico**: Spring Boot 4 moveu a autoconfiguração do Kafka para um módulo próprio (`spring-boot-starter-kafka`/`spring-boot-starter-kafka-test`) — `spring-kafka` sozinho não bastava, o `KafkaTemplate` não era autoconfigurado. Corrigido trocando as dependências.
+
+**Bug real encontrado e corrigido** (não pelos testes automatizados, pela validação manual contra Kafka de verdade): a primeira versão contava o `CountDownLatch` de dentro do próprio método `@Transactional` do listener — sinalizando conclusão *antes* do commit da transação (o proxy do Spring commita depois que o método retorna). Isso causava leitura de saldo inconsistente (vi `saldoFinal: 50` quando deveria ser `100`). Os testes com Testcontainers passaram mesmo com o bug — a janela de corrida era curta demais para se manifestar de forma confiável em execução local rápida, mas apareceu de forma consistente no ambiente Docker. Corrigi movendo a lógica transacional para beans separados (`CreditoSemIdempotenciaOperacao`/`CreditoIdempotenteOperacao`), e documentei o padrão em `docs/decisions/0006-sincronizacao-so-apos-commit-em-listeners.md` para valer em qualquer consumidor assíncrono futuro do projeto.
+
+**Testes**: `ExecucaoKafkaIdempotenciaServiceIntegrationTest` com Testcontainers rodando **Kafka e PostgreSQL reais simultaneamente** — 2 testes, rodados 3 vezes seguidas sem falha. 21/21 testes no total no backend.
+
+**Validação real contra o ambiente**: primeira subida real do profile `messaging` (Kafka em KRaft + Kafka UI nunca tinham sido testados em execução antes) — confirmei nos logs que os dois listeners conectaram e receberam suas partições. `curl` repetido duas vezes: `sem-idempotencia` sempre R$ 100 (creditou duas vezes), `idempotente` sempre R$ 50 (deduplicado corretamente). Confirmei os tópicos reais via API do Kafka UI. **Testei no Chrome de verdade**: os dois botões, card de saldo vermelho/verde. Zero erros no console. Ambiente derrubado ao final.
+
+Frontend: novo `PainelExecucaoKafka` e `ConteudoLaboratorioKafka` (conceitos de semântica de entrega vs. idempotência vs. efeito de negócio, contraste explícito com o laboratório de Race Condition). Reaproveitou o proxy genérico da Fase 3 sem alterações. Catálogo atualizado: `kafka-idempotencia` agora `DISPONIVEL`.
+
+Documentação atualizada: `SPEC-LAB-KAFKA-IDEMP-001` (evidências completas, incluindo o bug), novo ADR-0006, `README.md`, `docs/roadmap.md`, `docs/links.md` (com a exigência de dois profiles juntos), `docs/testing-guide.md`.
+
+Nota: esta interação foi interrompida por um reset de limite de uso da Claude no meio da execução (mensagem de sistema, não do usuário) e retomada exatamente de onde parou, sem repetir trabalho já concluído.
+
+Vou commitar e subir tudo agora.
+
+Com isso, os três primeiros laboratórios do roadmap original (N+1, Race Condition, Kafka/Idempotência) estão completos, testados e validados de ponta a ponta.
