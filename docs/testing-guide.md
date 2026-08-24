@@ -295,6 +295,37 @@ Validações executadas:
   duas variantes disparam execuções reais, com "Deadlocks (REAL)" em
   vermelho quando `> 0` e verde quando `0`.
 
+## Validação do laboratório de Query sem índice (2026-08-23)
+
+Pré-requisito: backend rodando com PostgreSQL real. A semente de
+200.000 linhas é inserida uma única vez, na subida da aplicação.
+
+| Endpoint | Método | Cenário | Resultado esperado |
+|---|---|---|---|
+| `/api/laboratorios/query-sem-indice/execucoes/sem-indice` | POST | Índice removido, busca por email | `200`, `metricas.tipoDoPlano: "Seq Scan"` |
+| `/api/laboratorios/query-sem-indice/execucoes/com-indice` | POST | Índice criado, mesma busca | `200`, `metricas.tipoDoPlano` iniciando com "Index" |
+| `/api/laboratorios/query-sem-indice/execucoes/inexistente` | POST | Variante inválida | `400`, formato de erro padrão |
+
+Validações executadas:
+- **Dois achados reais durante a implementação**: `@Modifying` do
+  Spring Data JPA exige contexto transacional (`@Transactional`
+  adicionado ao serviço); e o otimizador escolheu `Bitmap Heap Scan`
+  em vez de `Index Scan` até um `ANALYZE` real ser adicionado após
+  semear/indexar — ver `SPEC-LAB-INDICE-001`.
+- Testes de integração com Testcontainers
+  (`ExecucaoIndiceServiceIntegrationTest`, 2 testes), com 200.000
+  linhas reais. Suíte completa do backend: 37/37 testes.
+- Os 3 cenários validados manualmente com `curl` contra o Docker
+  Compose real. Números reais observados: `sem-indice` → `Seq Scan`,
+  12,934 ms de execução real da query; `com-indice` → `Index Scan`,
+  0,028 ms — diferença real de ~460×.
+- **Isolamento validado**: uma execução de `sem-indice` (Seq Scan
+  completo em 200 mil linhas) disparada em paralelo com uma execução
+  do laboratório de N+1, que respondeu normalmente.
+- Painel interativo em `/laboratorios/query-sem-indice` validado no
+  Chrome: as duas variantes disparam execuções reais, com "Plano
+  (REAL)" em vermelho para `Seq Scan` e verde para `Index Scan`.
+
 ## Preenchimento futuro (por fase)
 
 - **Fase 2/3**: pré-requisitos de ambiente, ordem de subida dos serviços

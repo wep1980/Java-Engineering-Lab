@@ -2394,3 +2394,19 @@ próximo do backlog, mesmo critério
 ### Claude
 
 Pergunta exploratória — recomendei "Query sem índice" (`EXPLAIN ANALYZE` real mostrando seq scan vs. index scan, com diferença de tempo real e mensurável, zero infraestrutura nova), com o trade-off principal frente à alternativa mais próxima (Cartesian Product — também zero infra nova, mas ainda dentro da mesma família de "fetching de coleções JPA" já coberta três vezes entre N+1/Race/Eager Fetching; indexação é território totalmente novo, diversifica o portfólio de laboratórios), deixando claro que é uma sugestão a ser redirecionada — nenhuma implementação foi iniciada.
+
+---
+
+## Interação 2026-08-23 23:01:56
+
+### Usuário
+
+Query sem índice — pode começar
+
+### Claude
+
+Escrevi `specs/labs/SPEC-LAB-INDICE-001-query-sem-indice.md` e implementei por completo: backend (pacote `laboratorios.indice`) com uma tabela dedicada (`RegistroBusca`, 200.000 linhas reais semeadas via `generate_series`) e duas variantes — `sem-indice` (remove o índice de verdade via `DROP INDEX IF EXISTS`, roda `EXPLAIN (ANALYZE, FORMAT JSON)` real) e `com-indice` (cria o índice via `CREATE INDEX IF NOT EXISTS`, mesma busca); endpoint `POST /api/laboratorios/query-sem-indice/execucoes/{variante}`; registro no catálogo e no conhecimento do Assistente de IA; frontend com painel de execução e página de conteúdo educacional.
+
+**Dois achados reais durante a implementação**: (1) `@Modifying @Query(nativeQuery = true)` do Spring Data JPA exige contexto transacional — corrigido anotando `ExecucaoIndiceService.executar()` com `@Transactional`. (2) O primeiro teste real mostrou que, logo após criar o índice, o otimizador escolheu `Bitmap Heap Scan` em vez de `Index Scan` puro — comportamento legítimo, mas dependente de estatísticas desatualizadas; adicionei `ANALYZE registro_busca` real após semear e após cada criação/remoção do índice, o que tornou a demonstração consistente, e ajustei a asserção do teste para aceitar qualquer plano baseado em índice (não só "Index Scan"), já que a escolha exata do otimizador pode variar por ambiente.
+
+Validação real completa: 37/37 testes do backend (4 novos: 2 de controller, 2 de integração com Testcontainers, com 200.000 linhas reais); `npm run build`/`lint` sem erros; execução real via `curl` (`sem-indice` → Seq Scan real, 12,934ms; `com-indice` → Index Scan real, 0,028ms — diferença real de ~460×, bem mais dramática do que estimado a priori na SPEC); isolamento do restante da plataforma confirmado (N+1 respondeu normalmente durante um Seq Scan completo em 200 mil linhas); validação visual real no Chrome com as duas variantes clicadas, mostrando os mesmos números reais. Atualizei toda a documentação (SPEC com evidências, roadmap, links, testing-guide, README) e vou commitar e enviar tudo a seguir.

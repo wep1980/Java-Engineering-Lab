@@ -68,7 +68,18 @@ public class ConhecimentoLaboratorios {
                     forma consistente (por ID da conta, independente da direção da \
                     transferência) -- elimina matematicamente a espera circular, porque as \
                     duas transferências concorrentes sempre disputam a mesma conta \
-                    primeiro, nunca em ordens opostas."""
+                    primeiro, nunca em ordens opostas.""",
+            "query-sem-indice", """
+                    Laboratório de Query sem índice: uma tabela com 200 mil linhas, sem \
+                    índice na coluna usada no WHERE, força o PostgreSQL a fazer um Seq \
+                    Scan (varre a tabela inteira) para encontrar uma única linha por \
+                    igualdade de e-mail. Com um índice na mesma coluna, o otimizador \
+                    escolhe um Index Scan (ou Index Only Scan), que localiza a linha \
+                    diretamente. O laboratório usa EXPLAIN (ANALYZE, FORMAT JSON) real do \
+                    PostgreSQL -- o tipo de nó (Node Type) e o tempo real (Actual Total \
+                    Time) vêm do próprio banco, não são estimados nem medidos só do lado \
+                    da aplicação. O índice é criado e removido de verdade (DROP INDEX / \
+                    CREATE INDEX) a cada execução -- não é uma segunda tabela pré-indexada."""
     );
 
     public String buscar(String laboratorioId) {

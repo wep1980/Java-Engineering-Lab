@@ -19,6 +19,7 @@
 | 8 | Hardening | **Concluída** (2026-08-23) | Dependency-Check + npm audit no CI, JaCoCo, SonarQube validado (3 bugs reais corrigidos), teste de carga real, UX (404/títulos), LICENSE/CONTRIBUTING/CODE_OF_CONDUCT — `SPEC-JEL-007` |
 | — | Laboratório Connection Pool Exhaustion | **Concluída** (2026-08-23) | Primeiro item implementado do backlog pós-Fase 8 — `SPEC-LAB-CONN-POOL-001` |
 | — | Laboratório Deadlock | **Concluída** (2026-08-23) | Segundo item implementado do backlog pós-Fase 8 — `SPEC-LAB-DEADLOCK-001` |
+| — | Laboratório Query sem índice | **Concluída** (2026-08-23) | Terceiro item implementado do backlog pós-Fase 8 — `SPEC-LAB-INDICE-001` |
 
 ## Backlog de laboratórios futuros
 
@@ -28,7 +29,7 @@ antes de implementação, conforme `docs/decisions/0003-ids-de-spec.md`:
 1. LazyInitializationException
 2. Eager Fetching excessivo
 3. Cartesian Product
-4. Query sem índice
+4. ~~Query sem índice~~ — implementado, ver `SPEC-LAB-INDICE-001`
 5. ~~Deadlock~~ — implementado, ver `SPEC-LAB-DEADLOCK-001`
 6. ~~Connection Pool Exhaustion~~ — implementado, ver `SPEC-LAB-CONN-POOL-001`
 7. Transactional Outbox (ver seção 27 do prompt mestre)

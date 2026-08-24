@@ -7,7 +7,7 @@ Repositório: https://github.com/wep1980/Java-Engineering-Lab
 > entrevistas) de aplicações Java/Spring: N+1, race conditions,
 > mensageria duplicada, e outros.
 
-**Status atual: cinco laboratórios completos, pós-Fase 8 (Hardening).**
+**Status atual: seis laboratórios completos, pós-Fase 8 (Hardening).**
 Logs estruturados, métricas (Prometheus/Grafana), tracing distribuído
 (OpenTelemetry/Tempo), um assistente de IA (Ollama, modelo local) com
 contexto real de cada laboratório, análise de qualidade estática
@@ -52,6 +52,7 @@ introdução → arquitetura → executar problema → observar → diagnosticar
 | Kafka / Mensagem Duplicada / Idempotência | **Disponível** — `/laboratorios/kafka-idempotencia`, 2 variantes com Kafka real (`specs/labs/SPEC-LAB-KAFKA-IDEMP-001-mensagem-duplicada-idempotencia.md`) |
 | Connection Pool Exhaustion | **Disponível** — `/laboratorios/connection-pool-exhaustion`, 3 variantes com pools HikariCP isolados e concorrência real (`specs/labs/SPEC-LAB-CONN-POOL-001-connection-pool-exhaustion.md`) |
 | Deadlock | **Disponível** — `/laboratorios/deadlock`, 2 variantes com deadlock real detectado pelo PostgreSQL (`specs/labs/SPEC-LAB-DEADLOCK-001-deadlock.md`) |
+| Query sem índice | **Disponível** — `/laboratorios/query-sem-indice`, 2 variantes com EXPLAIN ANALYZE real do PostgreSQL (`specs/labs/SPEC-LAB-INDICE-001-query-sem-indice.md`) |
 | Demais laboratórios do backlog | Ver `docs/roadmap.md` |
 
 ## Stack
@@ -242,8 +243,20 @@ Compose real (não os testes automatizados), foi encontrado e corrigido
 mais um achado real: faltava o inicializador que popula as contas de
 demonstração na subida da aplicação — mesma lição já registrada nas
 ADRs anteriores sobre a importância de validar contra infraestrutura
-real. Os demais laboratórios futuros do backlog seguem pendentes de
-aprovação antes de começar (ver
+real. Como terceiro item do backlog, foi implementado o laboratório de
+Query sem índice (`SPEC-LAB-INDICE-001`): uma tabela com 200.000 linhas
+reais, sem índice na coluna de busca, e `EXPLAIN (ANALYZE, FORMAT
+JSON)` real do PostgreSQL comparando o plano de execução (`Seq Scan`
+vs. `Index Scan`) e o tempo real — o índice é criado e removido de
+verdade (`CREATE INDEX`/`DROP INDEX`) a cada execução, o mesmo comando
+que um engenheiro rodaria em produção. A diferença real medida foi de
+~460× (12,9ms de Seq Scan contra 0,03ms de Index Scan). Dois achados
+reais no caminho: `@Modifying` do Spring Data JPA exige contexto
+transacional; e o otimizador só escolheu consistentemente `Index Scan`
+depois de um `ANALYZE` real ser adicionado após semear/indexar os
+dados — sem isso, escolhia `Bitmap Heap Scan` por estatísticas
+desatualizadas. Os demais laboratórios futuros do backlog seguem
+pendentes de aprovação antes de começar (ver
 `docs/roadmap.md`).
 
 ## Licença

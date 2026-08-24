@@ -42,6 +42,12 @@ public class CatalogoLaboratoriosService {
                     "Deadlock",
                     "Demonstrar um deadlock real de banco de dados por ordem de aquisição de locks inconsistente, e a correção por ordenação consistente.",
                     StatusLaboratorio.DISPONIVEL
+            ),
+            new LaboratorioResumo(
+                    "query-sem-indice",
+                    "Query sem índice",
+                    "Demonstrar a diferença real de plano de execução (Seq Scan vs. Index Scan) e de tempo entre uma busca sem índice e com índice, usando EXPLAIN ANALYZE real do PostgreSQL.",
+                    StatusLaboratorio.DISPONIVEL
             )
     );
 
