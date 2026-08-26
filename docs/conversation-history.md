@@ -2410,3 +2410,16 @@ Escrevi `specs/labs/SPEC-LAB-INDICE-001-query-sem-indice.md` e implementei por c
 **Dois achados reais durante a implementação**: (1) `@Modifying @Query(nativeQuery = true)` do Spring Data JPA exige contexto transacional — corrigido anotando `ExecucaoIndiceService.executar()` com `@Transactional`. (2) O primeiro teste real mostrou que, logo após criar o índice, o otimizador escolheu `Bitmap Heap Scan` em vez de `Index Scan` puro — comportamento legítimo, mas dependente de estatísticas desatualizadas; adicionei `ANALYZE registro_busca` real após semear e após cada criação/remoção do índice, o que tornou a demonstração consistente, e ajustei a asserção do teste para aceitar qualquer plano baseado em índice (não só "Index Scan"), já que a escolha exata do otimizador pode variar por ambiente.
 
 Validação real completa: 37/37 testes do backend (4 novos: 2 de controller, 2 de integração com Testcontainers, com 200.000 linhas reais); `npm run build`/`lint` sem erros; execução real via `curl` (`sem-indice` → Seq Scan real, 12,934ms; `com-indice` → Index Scan real, 0,028ms — diferença real de ~460×, bem mais dramática do que estimado a priori na SPEC); isolamento do restante da plataforma confirmado (N+1 respondeu normalmente durante um Seq Scan completo em 200 mil linhas); validação visual real no Chrome com as duas variantes clicadas, mostrando os mesmos números reais. Atualizei toda a documentação (SPEC com evidências, roadmap, links, testing-guide, README) e vou commitar e enviar tudo a seguir.
+
+## Interação 2026-08-26 17:21:14
+
+### Usuário
+
+continue de onde voce parou
+
+### Claude
+
+Verifiquei o estado real do repositório: o laboratório de Query sem índice (último item registrado na interação anterior) já está commitado (`496d8a5`) e enviado — `git status` limpo, branch sincronizada com `origin/master`. Não havia trabalho pendente para retomar.
+
+Como não há nada em andamento, tratei como continuação do mesmo padrão das interações anteriores (escolher o próximo item do backlog pós-Fase 8, mesmo critério de diversificação de portfólio e zero infraestrutura nova) — pergunta exploratória, resposta curta: recomendei "Circuit Breaker" como próximo candidato. Justificativa: os últimos três laboratórios implementados (Connection Pool Exhaustion, Deadlock, Query sem índice) e vários dos anteriores (N+1, Race Condition, Kafka/Idempotência) giram em torno de banco de dados/persistência; Circuit Breaker abre território novo (resiliência entre serviços) sem exigir infraestrutura adicional (basta um endpoint simulando uma dependência lenta/instável). Deixei claro que é sugestão a ser redirecionada — nenhuma implementação foi iniciada, aguardando aprovação.
+
