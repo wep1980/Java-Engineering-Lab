@@ -2828,3 +2828,23 @@ Atualizei toda a documentação (SPEC com evidências, roadmap, links,
 testing-guide, README) e vou revisar com git status/diff e
 commitar+enviar a seguir.
 
+
+## Interação 2026-08-27 12:05:56
+
+### Usuário
+
+próximo item do backlog, mesmo critério
+
+### Claude
+
+Pergunta exploratória — recomendei "Memory Leak/OutOfMemoryError", que
+já tinha sido a alternativa mais próxima nas duas últimas recomendações
+(Circuit Breaker e Ordenação de Eventos) e continua zero infraestrutura
+nova: é o único item do backlog restante em território de JVM/heap,
+totalmente não tocado ainda, versus os demais itens próximos (Thread
+Pool Exhaustion, mesma família de "esgotamento de recurso" do
+Connection Pool Exhaustion; Retry Storm/Timeout Cascade, mesma família
+de resiliência do Circuit Breaker; família de JPA fetching, já coberta
+3×). Deixei claro que é uma sugestão a ser redirecionada — nenhuma
+implementação foi iniciada.
+
