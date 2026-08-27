@@ -35,6 +35,8 @@ Subindo com `docker compose --profile core up --build` (após copiar
 | Execução do laboratório Query sem índice (API) | `POST http://localhost:8080/api/laboratorios/query-sem-indice/execucoes/{variante}` | `variante`: `sem-indice`, `com-indice` — validado, `origemDados: REAL` |
 | Laboratório de Circuit Breaker (frontend) | http://localhost:3000/laboratorios/circuit-breaker | Validado no navegador (2026-08-27) — 2 variantes, circuit breaker real (Resilience4j) |
 | Execução do laboratório Circuit Breaker (API) | `POST http://localhost:8080/api/laboratorios/circuit-breaker/execucoes/{variante}` | `variante`: `sem-circuit-breaker`, `com-circuit-breaker` — validado, `origemDados: REAL` |
+| Laboratório de Transactional Outbox (frontend) | http://localhost:3000/laboratorios/transactional-outbox | Validado no navegador (2026-08-27) — 2 variantes, exige perfil `messaging` (Kafka real) |
+| Execução do laboratório Transactional Outbox (API) | `POST http://localhost:8080/api/laboratorios/transactional-outbox/execucoes/{variante}` | `variante`: `sem-outbox`, `com-outbox` — validado, `origemDados: REAL` |
 | Health-check do backend | http://localhost:8080/actuator/health | Validado retornando `{"status":"UP"}` |
 | Swagger UI | http://localhost:8080/swagger-ui/index.html | Validado retornando `200` |
 | OpenAPI (JSON) | http://localhost:8080/v3/api-docs | Validado retornando `200` |

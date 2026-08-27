@@ -20,8 +20,13 @@ import static org.assertj.core.api.Assertions.assertThat;
  * specs/labs/SPEC-LAB-N1-001-n-mais-um-queries.md. Números fixos abaixo
  * dependem da massa de dados determinística de SeedDadosN1.
  */
+// outbox.relay.habilitado=false: o relay do laboratório de Transactional
+// Outbox roda a cada 200ms em qualquer contexto Spring completo e
+// incrementa o contador global de statements do Hibernate usado pelas
+// asserções de contagem exata de queries abaixo -- achado real, ver
+// specs/labs/SPEC-LAB-OUTBOX-001-transactional-outbox.md.
 @Testcontainers
-@SpringBootTest
+@SpringBootTest(properties = "outbox.relay.habilitado=false")
 class ExecucaoN1ServiceIntegrationTest {
 
     @Container

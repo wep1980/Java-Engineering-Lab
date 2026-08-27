@@ -346,6 +346,26 @@ Validações executadas:
 - Painel interativo em `/laboratorios/circuit-breaker` validado no Chrome: as duas variantes disparam execuções reais, com "Rejeitadas pelo circuito" em verde quando `> 0` e "Estado final do circuito" em laranja para `OPEN`.
 - **Achado real durante a validação, fora do escopo deste laboratório**: o Docker Desktop do ambiente ficou indisponível por causa do disco `C:` quase cheio (3,3 GB livres de ~476 GB), travando o motor por ~19h de CPU acumulada. Resolvido liberando espaço (remoção de uma distro WSL não utilizada, com backup prévio) e reiniciando o motor à força — sem relação com o código deste laboratório, que não usa Docker/Testcontainers em nada.
 
+## Validação do laboratório de Transactional Outbox (2026-08-27)
+
+Pré-requisito: backend rodando com o perfil `messaging` (Kafka real) —
+`docker compose --profile core --profile messaging up`.
+
+| Endpoint | Método | Cenário | Resultado real observado |
+|---|---|---|---|
+| `/api/laboratorios/transactional-outbox/execucoes/sem-outbox` | POST | Pedido salvo, publicação direta aponta para endereço inalcançável | `200`, `eventoRegistradoNaOutbox: false`, `eventoPublicadoNoKafka: false`, `inconsistente: true`, `duracaoMs: 1072` |
+| `/api/laboratorios/transactional-outbox/execucoes/com-outbox` | POST | Pedido + evento outbox na mesma transação, relay real publica | `200`, `eventoRegistradoNaOutbox: true`, `eventoPublicadoNoKafka: true`, `inconsistente: false`, `duracaoMs: 617` |
+| `/api/laboratorios/transactional-outbox/execucoes/inexistente` | POST | Variante inválida | `400`, formato de erro padrão |
+
+Validações executadas:
+- **Três achados reais durante a implementação**: colisão de nome com a entidade `Pedido`/tabela `pedido` já existente no laboratório de N+1 (corrigido renomeando para `PedidoOutbox`/`pedido_outbox`); bean `ObjectMapper` autoconfigurado indisponível (corrigido construindo diretamente); relay `@Scheduled` poluindo a contagem global de statements do Hibernate usada pelo laboratório de N+1 em `mvn verify` (corrigido com a flag `outbox.relay.habilitado`, desligada explicitamente no teste de N+1) — ver `SPEC-LAB-OUTBOX-001` para os detalhes completos.
+- Testes automatizados reais com Testcontainers (Kafka + PostgreSQL reais simultâneos): `ExecucaoOutboxServiceIntegrationTest` (2 testes) e `ExecucaoOutboxControllerTest` (2 testes), todos passando. Suíte completa do backend: **45/45 testes**, revalidada 2× após a correção do achado do relay.
+- `npm run lint` e `npm run build` do frontend sem erros.
+- Os 3 cenários validados manualmente com `curl` contra o Docker Compose real (perfis `core` + `messaging`) — números reais na tabela acima. Tópico `pedidos-criados` confirmado via API do Kafka UI, criado automaticamente, com a mensagem real publicada.
+- **Isolamento validado**: uma execução de `sem-outbox` (~1s) disparada em paralelo com uma execução do laboratório de N+1, que respondeu normalmente em 57ms.
+- Painel interativo em `/laboratorios/transactional-outbox` validado no Chrome: as duas variantes disparam execuções reais, com "Inconsistente" em vermelho para `sem-outbox` e verde para `com-outbox`.
+- **Achado de infraestrutura durante a validação** (fora do escopo do código): a porta do frontend não aceitava conexões logo após subir o Compose, resquício do restart forçado do Docker feito mais cedo na sessão — resolvido com `docker restart` do container do frontend.
+
 ## Preenchimento futuro (por fase)
 
 - **Fase 2/3**: pré-requisitos de ambiente, ordem de subida dos serviços

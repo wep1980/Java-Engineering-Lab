@@ -54,6 +54,12 @@ public class CatalogoLaboratoriosService {
                     "Circuit Breaker",
                     "Demonstrar a falha em cascata contra uma dependência externa instável e como um circuit breaker real (Resilience4j) interrompe chamadas fadadas ao fracasso em vez de deixar cada requisição pagar o custo total da falha.",
                     StatusLaboratorio.DISPONIVEL
+            ),
+            new LaboratorioResumo(
+                    "transactional-outbox",
+                    "Transactional Outbox",
+                    "Demonstrar a escrita dupla não-atômica entre banco e Kafka (o dado é salvo, mas a publicação do evento pode falhar e se perder para sempre) e como o padrão Transactional Outbox garante que o evento nunca se perde, só é adiado.",
+                    StatusLaboratorio.DISPONIVEL
             )
     );
 

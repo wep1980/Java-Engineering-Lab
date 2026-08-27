@@ -93,7 +93,21 @@ public class ConhecimentoLaboratorios {
                     dependência. O circuito é uma máquina de estados real (CLOSED -> OPEN \
                     -> HALF_OPEN), não uma simulação -- o mesmo padrão usado em produção \
                     para evitar que uma dependência instável derrube a própria aplicação \
-                    por exaustão de threads/conexões esperando por ela."""
+                    por exaustão de threads/conexões esperando por ela.""",
+            "transactional-outbox", """
+                    Laboratório de Transactional Outbox: salvar no banco e publicar um evento \
+                    no Kafka são duas operações separadas contra dois sistemas diferentes, sem \
+                    garantia atômica entre elas -- se o banco confirma e o Kafka falha, o dado \
+                    existe mas nenhum outro serviço jamais saberá disso (inconsistência \
+                    silenciosa e permanente). O laboratório reproduz isso de verdade: a \
+                    variante sem-outbox tenta publicar direto num endereço Kafka inalcançável \
+                    (falha real de conexão, não fabricada) logo após o banco já ter confirmado. \
+                    A correção -- Transactional Outbox -- escreve o Pedido E um registro do \
+                    evento pendente na MESMA transação local (só o banco precisa ser atômico); \
+                    um relay real (@Scheduled, roda a cada 200ms, independente da requisição \
+                    HTTP) publica os eventos pendentes no Kafka real e marca como publicado só \
+                    após confirmação real de entrega. Se o Kafka estivesse fora do ar, o evento \
+                    simplesmente ficaria pendente no banco -- nunca é perdido, só adiado."""
     );
 
     public String buscar(String laboratorioId) {

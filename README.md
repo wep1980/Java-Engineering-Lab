@@ -54,6 +54,7 @@ introdução → arquitetura → executar problema → observar → diagnosticar
 | Deadlock | **Disponível** — `/laboratorios/deadlock`, 2 variantes com deadlock real detectado pelo PostgreSQL (`specs/labs/SPEC-LAB-DEADLOCK-001-deadlock.md`) |
 | Query sem índice | **Disponível** — `/laboratorios/query-sem-indice`, 2 variantes com EXPLAIN ANALYZE real do PostgreSQL (`specs/labs/SPEC-LAB-INDICE-001-query-sem-indice.md`) |
 | Circuit Breaker | **Disponível** — `/laboratorios/circuit-breaker`, 2 variantes com circuit breaker real (Resilience4j) contra uma dependência instável (`specs/labs/SPEC-LAB-CIRCUITBREAKER-001-circuit-breaker.md`) |
+| Transactional Outbox | **Disponível** — `/laboratorios/transactional-outbox`, 2 variantes com Kafka real e relay assíncrono (`specs/labs/SPEC-LAB-OUTBOX-001-transactional-outbox.md`) |
 | Demais laboratórios do backlog | Ver `docs/roadmap.md` |
 
 ## Stack
@@ -272,9 +273,28 @@ com o estado real do circuito (`OPEN`) como evidência de que a proteção
 realmente agiu. Durante a validação, o Docker Desktop do ambiente ficou
 indisponível por um problema de disco cheio, não relacionado ao código
 deste laboratório — resolvido antes de concluir a validação completa
-(suíte, `curl` real contra o Docker Compose, Chrome). Os demais
-laboratórios futuros do backlog seguem pendentes de aprovação antes de
-começar (ver `docs/roadmap.md`).
+(suíte, `curl` real contra o Docker Compose, Chrome). Como quinto item
+do backlog, foi implementado o laboratório de Transactional Outbox
+(`SPEC-LAB-OUTBOX-001`): salvar no banco e publicar no Kafka são duas
+operações separadas contra dois sistemas diferentes, sem garantia
+atômica — a variante `sem-outbox` reproduz isso com uma falha real de
+conexão (endereço Kafka inalcançável) logo após o banco já ter
+confirmado; a correção escreve o pedido e um evento pendente na mesma
+transação local, e um relay real (`@Scheduled`, roda de forma
+assíncrona a cada 200ms, independente da requisição HTTP) publica os
+eventos pendentes no Kafka real. Números reais medidos via `curl`:
+`sem-outbox` → pedido persistido, evento nunca publicado,
+`inconsistente: true`, 1072ms; `com-outbox` → evento registrado e
+publicado pelo relay, `inconsistente: false`, 617ms. Três achados reais
+no caminho: colisão de nome com a entidade `Pedido` já existente no
+laboratório de N+1 (corrigido renomeando para `PedidoOutbox`); bean
+`ObjectMapper` autoconfigurado indisponível sob Spring Boot 4.1
+(corrigido construindo-o diretamente); e o relay rodando em qualquer
+teste com contexto Spring completo poluiu a contagem global de queries
+do Hibernate usada pelo laboratório de N+1 em `mvn verify` — corrigido
+com uma flag de habilitação, desligada explicitamente nesse teste. Os
+demais laboratórios futuros do backlog seguem pendentes de aprovação
+antes de começar (ver `docs/roadmap.md`).
 
 ## Licença
 

@@ -2696,3 +2696,60 @@ e critérios de aceite marcados, roadmap, links, testing-guide, README)
 e revisei `git status` antes de commitar — nenhum arquivo inesperado,
 nada sensível.
 
+
+## Interação 2026-08-27 09:42:13
+
+### Usuário
+
+Transactional Outbox — pode começar
+
+### Claude
+
+Escrevi `specs/labs/SPEC-LAB-OUTBOX-001-transactional-outbox.md` e
+implementei por completo: backend (pacote `laboratorios.outbox`) com
+`PedidoOutbox`/`OutboxEvento`, duas variantes — `sem-outbox` (salva o
+pedido com commit real, depois tenta publicar direto num endereço
+Kafka inalcançável, `127.0.0.1:1`, falha real de conexão) e
+`com-outbox` (salva pedido + evento outbox na mesma transação local; um
+relay real `@Scheduled`, rodando a cada 200ms de forma assíncrona e
+independente da requisição HTTP, publica no Kafka real e marca como
+publicado após confirmação real de entrega); endpoint
+`POST /api/laboratorios/transactional-outbox/execucoes/{variante}`;
+registro no catálogo e no conhecimento do Assistente de IA; frontend
+com painel de execução e página de conteúdo educacional.
+
+**Quatro achados reais durante a implementação**: (1) colisão de nome
+com a entidade `Pedido`/tabela `pedido` já existente no laboratório de
+N+1 — corrigido renomeando para `PedidoOutbox`/`pedido_outbox`; (2)
+bean `ObjectMapper` autoconfigurado indisponível sob Spring Boot 4.1
+(mesma categoria das relocações já vistas) — corrigido construindo-o
+diretamente; (3) os dois testes de integração compartilhavam o mesmo
+contexto/banco, então uma asserção de "tabela vazia" na variante
+`sem-outbox` dependia da ordem de execução — corrigido escopando pelo
+`pedidoId`; (4) o mais importante: o relay `@Scheduled` roda em
+QUALQUER teste que suba o contexto Spring completo, e seu polling a
+cada 200ms poluiu a contagem global de statements do Hibernate usada
+pelo laboratório de N+1, causando uma falha real e intermitente em
+`mvn verify` completo (`expected: 1L but was: 2L`) mesmo com todos os
+testes deste laboratório passando isoladamente — corrigido com uma
+flag `outbox.relay.habilitado` (padrão ligado, comportamento real de
+produção), desligada explicitamente só no teste de N+1.
+
+Validação real completa: 45/45 testes do backend (4 novos: 2 de
+controller, 2 de integração com Testcontainers Kafka+PostgreSQL
+simultâneos), revalidada 2× após a correção do achado do relay;
+`npm run build`/`lint` sem erros; execução real via `curl` contra o
+Docker Compose (perfis `core`+`messaging`): `sem-outbox` → evento nunca
+publicado, `inconsistente: true`, 1072ms; `com-outbox` → evento
+publicado pelo relay real, `inconsistente: false`, 617ms; tópico
+`pedidos-criados` confirmado via API do Kafka UI, criado
+automaticamente, com a mensagem real publicada; isolamento confirmado
+(N+1 respondeu em 57ms durante uma execução do outbox); validação
+visual real no Chrome com as duas variantes clicadas. Um achado de
+infraestrutura à parte (porta do frontend não aceitando conexões logo
+após subir o Compose, resquício do restart forçado do Docker mais cedo
+na sessão) foi resolvido com `docker restart` do container. Atualizei
+toda a documentação (SPEC com evidências, roadmap, links,
+testing-guide, README) e vou revisar com git status/diff e
+commitar+enviar a seguir.
+
