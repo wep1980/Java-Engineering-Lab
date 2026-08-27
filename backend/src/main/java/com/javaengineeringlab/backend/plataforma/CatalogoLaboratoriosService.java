@@ -66,6 +66,12 @@ public class CatalogoLaboratoriosService {
                     "Ordenação de Eventos",
                     "Demonstrar que Kafka só garante ordem dentro de uma partição, não entre partições, e como a chave de particionamento decide se os eventos de um mesmo agregado compartilham essa garantia.",
                     StatusLaboratorio.DISPONIVEL
+            ),
+            new LaboratorioResumo(
+                    "memory-leak",
+                    "Memory Leak / OutOfMemoryError",
+                    "Demonstrar, com heap e coleta de lixo reais, como um bean singleton guardando referências fortes indefinidamente vaza memória, e como o tipo de referência correto (WeakHashMap) corrige isso sem nenhuma lógica de eviction escrita à mão.",
+                    StatusLaboratorio.DISPONIVEL
             )
     );
 

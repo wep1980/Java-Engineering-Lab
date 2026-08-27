@@ -11,6 +11,7 @@ import { ConteudoLaboratorioIndice } from "@/componentes/ConteudoLaboratorioIndi
 import { ConteudoLaboratorioCircuitBreaker } from "@/componentes/ConteudoLaboratorioCircuitBreaker";
 import { ConteudoLaboratorioOutbox } from "@/componentes/ConteudoLaboratorioOutbox";
 import { ConteudoLaboratorioOrdenacao } from "@/componentes/ConteudoLaboratorioOrdenacao";
+import { ConteudoLaboratorioMemoria } from "@/componentes/ConteudoLaboratorioMemoria";
 import { buscarLaboratorioPorId } from "@/lib/laboratorios";
 
 export async function generateMetadata({
@@ -107,6 +108,10 @@ export default async function PaginaLaboratorio({
 
         {laboratorio.status === "DISPONIVEL" && laboratorio.id === "ordenacao-de-eventos" && (
           <ConteudoLaboratorioOrdenacao />
+        )}
+
+        {laboratorio.status === "DISPONIVEL" && laboratorio.id === "memory-leak" && (
+          <ConteudoLaboratorioMemoria />
         )}
       </main>
     </div>

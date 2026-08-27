@@ -124,7 +124,25 @@ public class ConhecimentoLaboratorios {
                     então os 20 eventos ficam garantidamente numa única partição e chegam na \
                     ordem exata em que foram publicados. A lição: "Kafka preserva ordem" é \
                     uma meia-verdade -- depende inteiramente da chave de particionamento \
-                    escolhida."""
+                    escolhida.""",
+            "memory-leak", """
+                    Laboratório de Memory Leak: o padrão mais comum em aplicações Spring \
+                    reais não é esquecer de fechar algum recurso -- é um bean singleton \
+                    (escopo de vida da aplicação inteira, um GC root) guardando referências \
+                    FORTES para objetos que deveriam ter vida curta, tipicamente um cache que \
+                    nunca ganhou política de expiração. O laboratório mede heap real via \
+                    MemoryMXBean antes e depois de adicionar 200 entradas de 100KB (~20MB) a \
+                    duas caches singleton diferentes, seguido de um System.gc() real. A \
+                    variante com-vazamento usa um Map comum -- o coletor de lixo não pode \
+                    reclamar nada, porque a cache ainda referencia cada entrada, então o heap \
+                    continua alto mesmo após o GC real. A variante sem-vazamento usa um \
+                    WeakHashMap -- como nada mais no sistema referencia as chaves depois que o \
+                    método retorna, o coletor de lixo as reclama livremente, e o heap volta \
+                    perto do valor anterior. Por segurança (o backend é compartilhado por \
+                    todos os laboratórios), a demonstração nunca provoca um OutOfMemoryError \
+                    de verdade -- mede a retenção real de heap em escala pequena e segura \
+                    (~20MB por execução), suficiente para provar a causa raiz sem nenhum \
+                    risco à estabilidade do processo."""
     );
 
     public String buscar(String laboratorioId) {

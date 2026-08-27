@@ -23,6 +23,7 @@
 | — | Laboratório Circuit Breaker | **Concluída** (2026-08-27) | Quarto item implementado do backlog pós-Fase 8 — `SPEC-LAB-CIRCUITBREAKER-001` |
 | — | Laboratório Transactional Outbox | **Concluída** (2026-08-27) | Quinto item implementado do backlog pós-Fase 8 — `SPEC-LAB-OUTBOX-001` |
 | — | Laboratório Ordenação de Eventos | **Concluída** (2026-08-27) | Sexto item implementado do backlog pós-Fase 8 — `SPEC-LAB-ORDEM-001` |
+| — | Laboratório Memory Leak / OutOfMemoryError | **Concluída** (2026-08-27) | Sétimo item implementado do backlog pós-Fase 8 — `SPEC-LAB-MEMLEAK-001` |
 
 ## Backlog de laboratórios futuros
 
@@ -44,7 +45,7 @@ antes de implementação, conforme `docs/decisions/0003-ids-de-spec.md`:
 13. Cache inconsistente
 14. Cache Stampede
 15. Thread Pool Exhaustion
-16. Memory Leak / OutOfMemoryError
+16. ~~Memory Leak / OutOfMemoryError~~ — implementado, ver `SPEC-LAB-MEMLEAK-001`
 17. Paginação incorreta
 18. Observabilidade insuficiente
 

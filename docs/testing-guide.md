@@ -386,6 +386,26 @@ Validações executadas:
 - **Isolamento validado**: uma execução de `sem-chave-particionamento` disparada em paralelo com uma execução do laboratório de N+1, que respondeu normalmente em 129ms.
 - Painel interativo em `/laboratorios/ordenacao-de-eventos` validado no Chrome: as duas variantes disparam execuções reais, com "Partições usadas" e "Ordem preservada" em vermelho para `sem-chave-particionamento` e verde para `com-chave-particionamento`, com a lista completa da ordem recebida exibida.
 
+## Validação do laboratório de Memory Leak / OutOfMemoryError (2026-08-27)
+
+Nenhum pré-requisito de infraestrutura (não usa PostgreSQL, Kafka nem
+qualquer outro serviço do `docker-compose.yml` — só o profile `core`,
+que sobe backend + PostgreSQL + frontend, é necessário).
+
+| Endpoint | Método | Cenário | Resultado real observado |
+|---|---|---|---|
+| `/api/laboratorios/memory-leak/execucoes/com-vazamento` | POST | Cache singleton com `Map` comum (referência forte) | `200`, `vazamentoDetectado: true`, ~20,9 MB retidos após `System.gc()` real (4/4 execuções) |
+| `/api/laboratorios/memory-leak/execucoes/sem-vazamento` | POST | Mesma cache, `WeakHashMap` (referência fraca) | `200`, `vazamentoDetectado: false`, poucos KB de ruído retidos (496 a 5.056 bytes, 4/4 execuções), `tamanhoCacheAposExecucao: 0` sempre |
+| `/api/laboratorios/memory-leak/execucoes/inexistente` | POST | Variante inválida | `400`, formato de erro padrão |
+
+Validações executadas:
+- **Dois achados reais durante a implementação**, ambos descobertos porque a primeira versão contava uma história errada com números reais: linha de base de heap medida antes de qualquer GC (mascarava o crescimento retido, `com-vazamento` chegou a mostrar `0` de retenção no primeiro teste); `WeakHashMap` não libera os valores sozinho — precisa de uma chamada real ao mapa (`size()`) para expurgar as entradas mortas antes de um segundo GC conseguir reclamar os valores de verdade. Ver `SPEC-LAB-MEMLEAK-001` para os detalhes completos.
+- Testes automatizados reais, sem Testcontainers (só heap e GC reais da própria JVM): `ExecucaoMemoriaServiceTest` (2 testes) e `ExecucaoMemoriaControllerTest` (2 testes), todos passando. Suíte completa do backend: **53/53 testes**.
+- `npm run lint` e `npm run build` do frontend sem erros.
+- Os 3 cenários validados manualmente com `curl` contra o Docker Compose real, 4 execuções consecutivas de cada variante — números reais na tabela acima. `tamanhoCacheAposExecucao` da variante `com-vazamento` cresceu cumulativamente (200, 400, 600, 800) ao longo das execuções, confirmando que a cache nunca esvazia — comportamento esperado de um vazamento real dentro da mesma JVM.
+- **Isolamento validado**: uma execução de `com-vazamento` disparada em paralelo com uma execução do laboratório de N+1, que respondeu normalmente em 51ms.
+- Painel interativo em `/laboratorios/memory-leak` validado no Chrome: as duas variantes disparam execuções reais, com "Retido após GC real" e "Vazamento detectado" em vermelho para `com-vazamento` (19,9 MB / Sim) e verde para `sem-vazamento` (0,0 MB / Não).
+
 ## Preenchimento futuro (por fase)
 
 - **Fase 2/3**: pré-requisitos de ambiente, ordem de subida dos serviços

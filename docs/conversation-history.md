@@ -2848,3 +2848,57 @@ de resiliência do Circuit Breaker; família de JPA fetching, já coberta
 3×). Deixei claro que é uma sugestão a ser redirecionada — nenhuma
 implementação foi iniciada.
 
+
+## Interação 2026-08-27 12:29:41
+
+### Usuário
+
+Memory Leak/OutOfMemoryError — pode começar
+
+### Claude
+
+Escrevi `specs/labs/SPEC-LAB-MEMLEAK-001-memory-leak.md` e implementei
+por completo: backend (pacote `laboratorios.memoria`), diferente dos
+anteriores, sem nenhuma infraestrutura externa — é inteiramente sobre
+o comportamento real da JVM (heap, GC, tipos de referência). Duas
+caches singleton (`CacheComVazamento`, `Map` comum; `CacheSemVazamento`,
+`WeakHashMap`) recebem ~20MB de entradas por execução; o serviço mede
+heap real via `MemoryMXBean` antes/depois de um `System.gc()` real.
+Decisão deliberada de segurança, documentada explicitamente na SPEC:
+como o backend é compartilhado por todos os laboratórios, a
+demonstração nunca provoca um `OutOfMemoryError` de verdade — as
+alocações são pequenas e controladas o bastante para nunca ameaçar a
+estabilidade do processo. Endpoint
+`POST /api/laboratorios/memory-leak/execucoes/{variante}`; registro no
+catálogo e no conhecimento do Assistente de IA; frontend com painel de
+execução e página de conteúdo educacional.
+
+**Dois achados reais durante a implementação**, ambos descobertos
+porque a primeira versão da medição contava uma história errada com
+números reais: (1) a linha de base de heap era medida antes de
+qualquer GC, incluindo lixo geral da JVM ainda não coletado — esse
+lixo era coletado junto na `System.gc()` seguinte, mascarando o
+crescimento realmente retido (o primeiro teste real mostrou `0` de
+retenção até para a variante `com-vazamento`); corrigido forçando GC
+também antes da linha de base. (2) `WeakHashMap` não libera os valores
+sozinho — mesmo depois de uma coleta real limpar a referência fraca de
+uma chave, o valor associado continua preso até uma operação real no
+mapa (`size()`) expurgar a entrada morta; sem isso, o primeiro teste
+real mostrou os ~20MB inteiros "retidos" até na variante corrigida.
+Corrigido chamando `tamanho()` entre dois GCs.
+
+Validação real completa: 53/53 testes do backend (4 novos: 2 de
+serviço, sem Testcontainers — só heap e GC reais da JVM rodando o
+teste —, 2 de controller); `npm run build`/`lint` sem erros; execução
+real via `curl` contra o Docker Compose, 4 execuções consecutivas de
+cada variante: `com-vazamento` → sempre ~20,9MB retidos,
+`vazamentoDetectado: true`, cache crescendo cumulativamente (200, 400,
+600, 800 — nunca esvazia, exatamente o esperado de um vazamento real);
+`sem-vazamento` → sempre poucos KB de ruído retidos,
+`vazamentoDetectado: false`, cache sempre zerada; isolamento
+confirmado (N+1 respondeu em 51ms durante uma execução da variante com
+vazamento); validação visual real no Chrome com as duas variantes
+clicadas. Atualizei toda a documentação (SPEC com evidências, roadmap,
+links, testing-guide, README) e vou revisar com git status/diff e
+commitar+enviar a seguir.
+

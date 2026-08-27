@@ -56,6 +56,7 @@ introdução → arquitetura → executar problema → observar → diagnosticar
 | Circuit Breaker | **Disponível** — `/laboratorios/circuit-breaker`, 2 variantes com circuit breaker real (Resilience4j) contra uma dependência instável (`specs/labs/SPEC-LAB-CIRCUITBREAKER-001-circuit-breaker.md`) |
 | Transactional Outbox | **Disponível** — `/laboratorios/transactional-outbox`, 2 variantes com Kafka real e relay assíncrono (`specs/labs/SPEC-LAB-OUTBOX-001-transactional-outbox.md`) |
 | Ordenação de Eventos | **Disponível** — `/laboratorios/ordenacao-de-eventos`, 2 variantes com tópico Kafka real de 3 partições (`specs/labs/SPEC-LAB-ORDEM-001-ordenacao-de-eventos.md`) |
+| Memory Leak / OutOfMemoryError | **Disponível** — `/laboratorios/memory-leak`, 2 variantes com heap e GC reais da JVM (`specs/labs/SPEC-LAB-MEMLEAK-001-memory-leak.md`) |
 | Demais laboratórios do backlog | Ver `docs/roadmap.md` |
 
 ## Stack
@@ -313,7 +314,30 @@ importante no caminho: a primeira versão bloqueava a cada publicação
 antes de enviar a próxima, serializando o envio inteiro e mascarando
 a demonstração (a variante "problemática" chegava sempre em ordem, por
 acidente) — corrigido disparando as 20 publicações antes de aguardar
-qualquer resultado. Os demais laboratórios futuros do backlog seguem
+qualquer resultado. Como sétimo item do backlog, foi implementado o
+laboratório de Memory Leak/OutOfMemoryError (`SPEC-LAB-MEMLEAK-001`):
+diferente dos anteriores, não usa nenhuma infraestrutura externa — é
+inteiramente sobre o comportamento real da JVM. Duas caches singleton
+(o mesmo escopo de vida da aplicação inteira de qualquer `@Service`)
+recebem ~20MB de entradas; a variante `com-vazamento` usa um `Map`
+comum (referência forte, nunca liberada); a variante `sem-vazamento`
+usa um `WeakHashMap` (referência fraca — assim que nada mais
+referencia a chave, o coletor de lixo a reclama). Por segurança (o
+backend é compartilhado por todos os laboratórios), a demonstração
+nunca provoca um `OutOfMemoryError` de verdade — mede heap real via
+`MemoryMXBean` antes/depois de um `System.gc()` real, em escala
+pequena o bastante para nunca ameaçar a estabilidade do processo.
+Números reais medidos via `curl` (4 execuções de cada variante):
+`com-vazamento` → sempre ~20,9MB retidos, cache crescendo
+cumulativamente (200, 400, 600, 800 entradas — nunca esvazia);
+`sem-vazamento` → sempre poucos KB de ruído retidos, cache sempre
+zerada após o GC. Dois achados reais no caminho, ambos descobertos
+porque a primeira versão da medição contava uma história errada com
+números reais: linha de base de heap medida antes de qualquer GC
+(mascarava o crescimento retido); e `WeakHashMap` não libera os
+valores sozinho — precisa de uma chamada real ao mapa para expurgar as
+entradas mortas antes de um segundo GC conseguir reclamar os valores
+de verdade. Os demais laboratórios futuros do backlog seguem
 pendentes de aprovação antes de começar (ver `docs/roadmap.md`).
 
 ## Licença
