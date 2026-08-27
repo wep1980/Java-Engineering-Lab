@@ -3037,3 +3037,27 @@ no Chrome com as duas variantes clicadas. Atualizei toda a
 documentação (SPEC com evidências, roadmap, links, testing-guide,
 README) e vou revisar com git status/diff e commitar+enviar a seguir.
 
+
+## Interação 2026-08-27 16:41:05
+
+### Usuário
+
+próximo item do backlog, mesmo critério
+
+### Claude
+
+Pergunta exploratória — sinalizei que o backlog de itens zero
+infraestrutura nova e genuinamente diversificados está se esgotando
+(9 laboratórios já implementados sobre Postgres/Kafka já existentes).
+Recomendei "Retry Storm" como opção padrão consistente com o critério
+usado até aqui (zero infra nova, mesma família de resiliência do
+Circuit Breaker mas mecanismo diferente — amplificação de carga por
+retentativas simultâneas, não abertura de circuito), mas destaquei
+explicitamente "Cache inconsistente/Cache Stampede" como alternativa
+forte agora que a maioria dos itens restantes ou repete família já
+coberta (JPA fetching ×3, paginação próxima de N+1/indexação) ou
+também exige infraestrutura nova (Redis) — quebrando pela primeira vez
+o critério de zero infra que guiou as recomendações anteriores.
+Apresentei como uma escolha real, não uma recomendação única. Nenhuma
+implementação foi iniciada.
+
