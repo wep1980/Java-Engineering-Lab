@@ -2988,3 +2988,52 @@ escopo maior: exige simular múltiplas etapas com lógica de compensação
 quando uma falha no meio do caminho). Deixei claro que é uma sugestão
 a ser redirecionada — nenhuma implementação foi iniciada.
 
+
+## Interação 2026-08-27 15:17:32
+
+### Usuário
+
+Saga — pode começar
+
+### Claude
+
+Escrevi `specs/labs/SPEC-LAB-SAGA-001-saga.md` e implementei por
+completo: backend (pacote `laboratorios.saga`) com duas etapas
+representando "serviços" diferentes — `EstoqueService.reservar`
+(sempre funciona, grava uma `ReservaEstoque` real com status
+`RESERVADA`) e `ProcessadorPagamento.cobrar` (sempre falha, exceção
+real e determinística `PagamentoRecusadoException`, simulando cartão
+recusado); duas variantes — `sem-compensacao` (nada desfaz a reserva
+quando o pagamento falha, ela fica `RESERVADA` para sempre) e
+`com-compensacao` (dispara `EstoqueService.cancelarReserva`, ação de
+compensação real que marca a reserva como `CANCELADA`); endpoint
+`POST /api/laboratorios/saga/execucoes/{variante}`; registro no
+catálogo e no conhecimento do Assistente de IA; frontend com painel de
+execução e página de conteúdo educacional.
+
+**Decisão de design registrada explicitamente na SPEC**: optei por
+saga orquestrada (chamada direta de método), não coreografada via
+Kafka, mesmo tendo recomendado Saga como "reaproveitando o Kafka já
+existente" na interação anterior — a lição central (ação de
+compensação explícita) não depende de mensageria para ser demonstrada
+de forma real e completa, e Kafka já foi demonstrado a fundo em três
+laboratórios anteriores (Idempotência, Outbox, Ordenação);
+coreografia adicionaria complexidade real sem reforçar a lição,
+contrariando o princípio de simplicidade do projeto. Documentei essa
+mudança de direção com a justificativa completa no laboratório.
+`pedidoId` é só um `UUID` de correlação entre as etapas, sem nenhuma
+entidade `Pedido` nova — evitando de propósito a colisão de nome já
+enfrentada no laboratório de Outbox.
+
+Validação real completa: 61/61 testes do backend (4 novos: 2 de
+integração com Testcontainers PostgreSQL, 2 de controller); `npm run
+build`/`lint` sem erros; execução real via `curl` contra o Docker
+Compose, repetido 4× de cada variante: `sem-compensacao` → sempre
+`estoqueConsistente: false`; `com-compensacao` → sempre
+`estoqueConsistente: true`; `pagamentoAprovado` sempre `false` em
+ambas — 100% consistente nas 8 execuções; isolamento confirmado (N+1
+respondeu em 60ms durante uma execução da saga); validação visual real
+no Chrome com as duas variantes clicadas. Atualizei toda a
+documentação (SPEC com evidências, roadmap, links, testing-guide,
+README) e vou revisar com git status/diff e commitar+enviar a seguir.
+

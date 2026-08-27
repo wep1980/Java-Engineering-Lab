@@ -13,6 +13,7 @@ import { ConteudoLaboratorioOutbox } from "@/componentes/ConteudoLaboratorioOutb
 import { ConteudoLaboratorioOrdenacao } from "@/componentes/ConteudoLaboratorioOrdenacao";
 import { ConteudoLaboratorioMemoria } from "@/componentes/ConteudoLaboratorioMemoria";
 import { ConteudoLaboratorioThreadPool } from "@/componentes/ConteudoLaboratorioThreadPool";
+import { ConteudoLaboratorioSaga } from "@/componentes/ConteudoLaboratorioSaga";
 import { buscarLaboratorioPorId } from "@/lib/laboratorios";
 
 export async function generateMetadata({
@@ -117,6 +118,10 @@ export default async function PaginaLaboratorio({
 
         {laboratorio.status === "DISPONIVEL" && laboratorio.id === "thread-pool-exhaustion" && (
           <ConteudoLaboratorioThreadPool />
+        )}
+
+        {laboratorio.status === "DISPONIVEL" && laboratorio.id === "saga" && (
+          <ConteudoLaboratorioSaga />
         )}
       </main>
     </div>

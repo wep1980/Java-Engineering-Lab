@@ -43,6 +43,8 @@ Subindo com `docker compose --profile core up --build` (após copiar
 | Execução do laboratório Memory Leak (API) | `POST http://localhost:8080/api/laboratorios/memory-leak/execucoes/{variante}` | `variante`: `com-vazamento`, `sem-vazamento` — validado, `origemDados: REAL` |
 | Laboratório de Thread Pool Exhaustion (frontend) | http://localhost:3000/laboratorios/thread-pool-exhaustion | Validado no navegador (2026-08-27) — 2 variantes, nenhuma infraestrutura extra (só o profile `core`) |
 | Execução do laboratório Thread Pool Exhaustion (API) | `POST http://localhost:8080/api/laboratorios/thread-pool-exhaustion/execucoes/{variante}` | `variante`: `fila-ilimitada`, `fila-limitada` — validado, `origemDados: REAL` |
+| Laboratório de Saga (frontend) | http://localhost:3000/laboratorios/saga | Validado no navegador (2026-08-27) — 2 variantes, nenhuma infraestrutura extra (só o profile `core`) |
+| Execução do laboratório Saga (API) | `POST http://localhost:8080/api/laboratorios/saga/execucoes/{variante}` | `variante`: `sem-compensacao`, `com-compensacao` — validado, `origemDados: REAL` |
 | Health-check do backend | http://localhost:8080/actuator/health | Validado retornando `{"status":"UP"}` |
 | Swagger UI | http://localhost:8080/swagger-ui/index.html | Validado retornando `200` |
 | OpenAPI (JSON) | http://localhost:8080/v3/api-docs | Validado retornando `200` |

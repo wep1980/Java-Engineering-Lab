@@ -58,6 +58,7 @@ introdução → arquitetura → executar problema → observar → diagnosticar
 | Ordenação de Eventos | **Disponível** — `/laboratorios/ordenacao-de-eventos`, 2 variantes com tópico Kafka real de 3 partições (`specs/labs/SPEC-LAB-ORDEM-001-ordenacao-de-eventos.md`) |
 | Memory Leak / OutOfMemoryError | **Disponível** — `/laboratorios/memory-leak`, 2 variantes com heap e GC reais da JVM (`specs/labs/SPEC-LAB-MEMLEAK-001-memory-leak.md`) |
 | Thread Pool Exhaustion | **Disponível** — `/laboratorios/thread-pool-exhaustion`, 2 variantes com `ThreadPoolExecutor` real (`specs/labs/SPEC-LAB-THREADPOOL-001-thread-pool-exhaustion.md`) |
+| Saga | **Disponível** — `/laboratorios/saga`, 2 variantes com ações de compensação reais (`specs/labs/SPEC-LAB-SAGA-001-saga.md`) |
 | Demais laboratórios do backlog | Ver `docs/roadmap.md` |
 
 ## Stack
@@ -357,9 +358,25 @@ máxima, 1004ms no total — **~2,5× mais rápido**, 100% determinístico
 em todas as execuções. Achado real no caminho: `Map.of()` não aceita
 mais de 10 pares — adicionar este laboratório ao conhecimento do
 Assistente de IA foi a 11ª entrada, corrigido trocando para
-`Map.ofEntries(Map.entry(...), ...)`. Os demais laboratórios futuros
-do backlog seguem pendentes de aprovação antes de começar (ver
-`docs/roadmap.md`).
+`Map.ofEntries(Map.entry(...), ...)`. Como nono item do backlog, foi
+implementado o laboratório de Saga (`SPEC-LAB-SAGA-001`): criar um
+pedido envolve duas etapas contra recursos diferentes (reservar
+estoque, depois cobrar pagamento) — não existe uma transação de banco
+única cobrindo as duas, cada etapa commita por conta própria. Neste
+laboratório, a etapa de pagamento sempre é recusada (falha real e
+determinística); a variante `sem-compensacao` não desfaz a reserva de
+estoque já feita — ela fica presa para sempre, um rastro inconsistente
+permanente; a variante `com-compensacao` dispara uma ação de
+compensação real (`cancelarReserva`) que devolve o estoque a um estado
+consistente. Implementação deliberadamente orquestrada (chamada
+direta de método), não coreografada via Kafka — Kafka já foi
+demonstrado a fundo em três laboratórios anteriores, e a lição central
+(compensação explícita) não depende de mensageria. Números reais
+medidos via `curl` (4 execuções de cada variante, 100% consistente):
+`sem-compensacao` → `estoqueConsistente: false` sempre;
+`com-compensacao` → `estoqueConsistente: true` sempre. 61/61 testes do
+backend passando. Os demais laboratórios futuros do backlog seguem
+pendentes de aprovação antes de começar (ver `docs/roadmap.md`).
 
 ## Licença
 

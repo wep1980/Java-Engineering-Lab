@@ -78,6 +78,12 @@ public class CatalogoLaboratoriosService {
                     "Thread Pool Exhaustion",
                     "Demonstrar como Executors.newFixedThreadPool esconde uma fila ilimitada por baixo, acumulando um backlog invisível sob carga sustentada, e como uma fila limitada com política de rejeição falha rápido e de forma previsível.",
                     StatusLaboratorio.DISPONIVEL
+            ),
+            new LaboratorioResumo(
+                    "saga",
+                    "Saga",
+                    "Demonstrar como uma falha no meio de uma transação de múltiplas etapas deixa o sistema inconsistente para sempre, e como o padrão Saga corrige isso com ações de compensação reais que desfazem etapas já concluídas.",
+                    StatusLaboratorio.DISPONIVEL
             )
     );
 

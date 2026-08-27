@@ -25,6 +25,7 @@
 | — | Laboratório Ordenação de Eventos | **Concluída** (2026-08-27) | Sexto item implementado do backlog pós-Fase 8 — `SPEC-LAB-ORDEM-001` |
 | — | Laboratório Memory Leak / OutOfMemoryError | **Concluída** (2026-08-27) | Sétimo item implementado do backlog pós-Fase 8 — `SPEC-LAB-MEMLEAK-001` |
 | — | Laboratório Thread Pool Exhaustion | **Concluída** (2026-08-27) | Oitavo item implementado do backlog pós-Fase 8 — `SPEC-LAB-THREADPOOL-001` |
+| — | Laboratório Saga | **Concluída** (2026-08-27) | Nono item implementado do backlog pós-Fase 8 — `SPEC-LAB-SAGA-001` |
 
 ## Backlog de laboratórios futuros
 
@@ -42,7 +43,7 @@ antes de implementação, conforme `docs/decisions/0003-ids-de-spec.md`:
 9. ~~Circuit Breaker~~ — implementado, ver `SPEC-LAB-CIRCUITBREAKER-001`
 10. Retry Storm
 11. Timeout Cascade
-12. Saga
+12. ~~Saga~~ — implementado, ver `SPEC-LAB-SAGA-001`
 13. Cache inconsistente
 14. Cache Stampede
 15. ~~Thread Pool Exhaustion~~ — implementado, ver `SPEC-LAB-THREADPOOL-001`

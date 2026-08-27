@@ -160,7 +160,24 @@ public class ConhecimentoLaboratorios {
                     fila), as outras 6 são rejeitadas de verdade (RejectedExecutionException \
                     real) na hora, em vez de silenciosamente enfileiradas. A lição: fila \
                     limitada + rejeição falha rápido e de forma previsível; fila ilimitada \
-                    esconde a sobrecarga até virar um problema maior depois.""")
+                    esconde a sobrecarga até virar um problema maior depois."""),
+            Map.entry("saga", """
+                    Laboratório de Saga: uma operação de negócio com múltiplas etapas contra \
+                    recursos/serviços diferentes (reservar estoque, depois cobrar pagamento) \
+                    não tem uma transação de banco única cobrindo tudo -- cada etapa commita \
+                    por conta própria. Se uma etapa posterior falha, as etapas anteriores JÁ \
+                    aconteceram de verdade e não desfazem sozinhas. Neste laboratório, a etapa \
+                    1 (reservar estoque) sempre funciona; a etapa 2 (cobrar pagamento) sempre \
+                    falha de propósito (cartão simulado recusado, falha real e determinística). \
+                    A variante sem-compensacao não faz nada quando a etapa 2 falha -- a reserva \
+                    de estoque fica RESERVADA para sempre, presa a um pedido que nunca vai se \
+                    completar. A variante com-compensacao dispara uma ação de compensação real \
+                    (cancelarReserva) quando a etapa 2 falha -- a reserva volta para CANCELADA, \
+                    um estado consistente, lido de volta do banco real após a execução. A \
+                    implementação é orquestrada (chamada direta de método), não coreografada \
+                    via Kafka -- decisão deliberada de simplicidade, já que a lição central \
+                    (ação de compensação explícita) não depende de mensageria, e Kafka já foi \
+                    demonstrado a fundo em três laboratórios anteriores.""")
     );
 
     public String buscar(String laboratorioId) {

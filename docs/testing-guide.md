@@ -425,6 +425,25 @@ Validações executadas:
 - Painel interativo em `/laboratorios/thread-pool-exhaustion` validado no Chrome: as duas variantes disparam execuções reais, com "Rejeitadas" em laranja quando `> 0` e "Maior espera na fila" em vermelho acima de 1s.
 - **Achado real durante a implementação**: `Map.of()` não aceita mais de 10 pares de chave/valor — adicionar este laboratório ao conhecimento do Assistente de IA foi a 11ª entrada, erro real de compilação, corrigido trocando para `Map.ofEntries(Map.entry(...), ...)` em todas as entradas existentes.
 
+## Validação do laboratório de Saga (2026-08-27)
+
+Nenhum pré-requisito de infraestrutura (não usa Kafka nem qualquer
+outro serviço além do PostgreSQL, já em uso desde a Fase 3 — só o
+profile `core`).
+
+| Endpoint | Método | Cenário | Resultado real observado |
+|---|---|---|---|
+| `/api/laboratorios/saga/execucoes/sem-compensacao` | POST | Reserva de estoque + pagamento recusado, sem ação de compensação | `200`, `estoqueReservado: true`, `pagamentoAprovado: false`, `compensacaoExecutada: false`, `estoqueConsistente: false` (4/4 execuções) |
+| `/api/laboratorios/saga/execucoes/com-compensacao` | POST | O mesmo cenário, com ação de compensação real ao falhar | `200`, `compensacaoExecutada: true`, `estoqueConsistente: true` (4/4 execuções) |
+| `/api/laboratorios/saga/execucoes/inexistente` | POST | Variante inválida | `400`, formato de erro padrão |
+
+Validações executadas:
+- Testes automatizados reais com Testcontainers (PostgreSQL real): `ExecucaoSagaServiceIntegrationTest` (2 testes) e `ExecucaoSagaControllerTest` (2 testes), todos passando. Suíte completa do backend: **61/61 testes**.
+- `npm run lint` e `npm run build` do frontend sem erros.
+- Os 3 cenários validados manualmente com `curl` contra o Docker Compose real, repetido 4× de cada variante — 100% consistente nas 8 execuções.
+- **Isolamento validado**: uma execução de `sem-compensacao` disparada em paralelo com uma execução do laboratório de N+1, que respondeu normalmente em 60ms.
+- Painel interativo em `/laboratorios/saga` validado no Chrome: as duas variantes disparam execuções reais, com "Estoque consistente" em vermelho para `sem-compensacao` (Não) e verde para `com-compensacao` (Sim).
+
 ## Preenchimento futuro (por fase)
 
 - **Fase 2/3**: pré-requisitos de ambiente, ordem de subida dos serviços
