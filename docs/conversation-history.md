@@ -2969,3 +2969,22 @@ duas variantes clicadas. Atualizei toda a documentação (SPEC com
 evidências, roadmap, links, testing-guide, README) e vou revisar com
 git status/diff e commitar+enviar a seguir.
 
+
+## Interação 2026-08-27 13:57:20
+
+### Usuário
+
+próximo item do backlog, mesmo critério
+
+### Claude
+
+Pergunta exploratória — recomendei "Saga", com o trade-off principal
+frente à alternativa mais próxima (Retry Storm — zero infra nova, mas
+mesma família de resiliência do Circuit Breaker recém-feito, e menor
+esforço de implementação; Saga é o único item restante em território
+genuinamente novo — transação distribuída/ações compensatórias entre
+etapas —, ainda reaproveitando 100% do Kafka já existente, mas com
+escopo maior: exige simular múltiplas etapas com lógica de compensação
+quando uma falha no meio do caminho). Deixei claro que é uma sugestão
+a ser redirecionada — nenhuma implementação foi iniciada.
+
