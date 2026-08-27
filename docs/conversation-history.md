@@ -2902,3 +2902,24 @@ clicadas. Atualizei toda a documentação (SPEC com evidências, roadmap,
 links, testing-guide, README) e vou revisar com git status/diff e
 commitar+enviar a seguir.
 
+
+## Interação 2026-08-27 12:56:42
+
+### Usuário
+
+próximo item do backlog, mesmo critério
+
+### Claude
+
+Pergunta exploratória — recomendei "Thread Pool Exhaustion", com o
+trade-off principal frente à alternativa mais próxima (Cache
+inconsistente/Cache Stampede — mecanismo genuinamente novo, mas exige
+Redis, primeira vez que o critério de "zero infraestrutura nova"
+precisaria ser abandonado; Thread Pool Exhaustion continua zero infra
+e, apesar de estar na mesma família ampla de "esgotamento de recurso"
+do Connection Pool Exhaustion, ataca um recurso diferente e mais
+severo — as threads do próprio servidor de requisições, cujo
+esgotamento pode travar a aplicação inteira, não só os endpoints que
+tocam banco). Deixei claro que é uma sugestão a ser redirecionada —
+nenhuma implementação foi iniciada.
+
