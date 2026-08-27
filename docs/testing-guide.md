@@ -326,6 +326,26 @@ Validações executadas:
   Chrome: as duas variantes disparam execuções reais, com "Plano
   (REAL)" em vermelho para `Seq Scan` e verde para `Index Scan`.
 
+## Validação do laboratório de Circuit Breaker (2026-08-27)
+
+Nenhum pré-requisito de infraestrutura (não usa PostgreSQL, Kafka nem
+qualquer outro serviço do `docker-compose.yml` — ver RNF-01 de
+`SPEC-LAB-CIRCUITBREAKER-001`).
+
+| Endpoint | Método | Cenário | Resultado real observado |
+|---|---|---|---|
+| `/api/laboratorios/circuit-breaker/execucoes/sem-circuit-breaker` | POST | Dependência sempre indisponível, sem proteção | `200`, `quantidadeFalhasReais: 20`, `quantidadeRejeitadasPeloCircuito: 0`, `estadoFinalDoCircuito: "DESABILITADO"`, `duracaoMs: 6014` |
+| `/api/laboratorios/circuit-breaker/execucoes/com-circuit-breaker` | POST | Mesma dependência, circuit breaker real (Resilience4j) | `200`, `quantidadeFalhasReais: 5`, `quantidadeRejeitadasPeloCircuito: 15`, `estadoFinalDoCircuito: "OPEN"`, `duracaoMs: 1509` (~4× mais rápido) |
+| `/api/laboratorios/circuit-breaker/execucoes/inexistente` | POST | Variante inválida | `400`, formato de erro padrão |
+
+Validações executadas:
+- Testes automatizados reais, sem Testcontainers (nenhuma infraestrutura externa envolvida): `ExecucaoCircuitBreakerServiceTest` (2 testes) e `ExecucaoCircuitBreakerControllerTest` (2 testes), todos passando. Suíte completa do backend: **41/41 testes**.
+- `npm run lint` e `npm run build` do frontend sem erros.
+- Os 3 cenários validados manualmente com `curl` contra o Docker Compose real — números reais na tabela acima.
+- **Isolamento validado**: uma execução de `sem-circuit-breaker` (6s de chamadas sequenciais lentas) disparada em paralelo com uma execução do laboratório de N+1, que respondeu normalmente em 59ms enquanto o circuit breaker ainda rodava.
+- Painel interativo em `/laboratorios/circuit-breaker` validado no Chrome: as duas variantes disparam execuções reais, com "Rejeitadas pelo circuito" em verde quando `> 0` e "Estado final do circuito" em laranja para `OPEN`.
+- **Achado real durante a validação, fora do escopo deste laboratório**: o Docker Desktop do ambiente ficou indisponível por causa do disco `C:` quase cheio (3,3 GB livres de ~476 GB), travando o motor por ~19h de CPU acumulada. Resolvido liberando espaço (remoção de uma distro WSL não utilizada, com backup prévio) e reiniciando o motor à força — sem relação com o código deste laboratório, que não usa Docker/Testcontainers em nada.
+
 ## Preenchimento futuro (por fase)
 
 - **Fase 2/3**: pré-requisitos de ambiente, ordem de subida dos serviços

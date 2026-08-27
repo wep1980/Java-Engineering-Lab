@@ -48,6 +48,12 @@ public class CatalogoLaboratoriosService {
                     "Query sem índice",
                     "Demonstrar a diferença real de plano de execução (Seq Scan vs. Index Scan) e de tempo entre uma busca sem índice e com índice, usando EXPLAIN ANALYZE real do PostgreSQL.",
                     StatusLaboratorio.DISPONIVEL
+            ),
+            new LaboratorioResumo(
+                    "circuit-breaker",
+                    "Circuit Breaker",
+                    "Demonstrar a falha em cascata contra uma dependência externa instável e como um circuit breaker real (Resilience4j) interrompe chamadas fadadas ao fracasso em vez de deixar cada requisição pagar o custo total da falha.",
+                    StatusLaboratorio.DISPONIVEL
             )
     );
 

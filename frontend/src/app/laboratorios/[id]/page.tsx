@@ -8,6 +8,7 @@ import { ConteudoLaboratorioKafka } from "@/componentes/ConteudoLaboratorioKafka
 import { ConteudoLaboratorioConnPool } from "@/componentes/ConteudoLaboratorioConnPool";
 import { ConteudoLaboratorioDeadlock } from "@/componentes/ConteudoLaboratorioDeadlock";
 import { ConteudoLaboratorioIndice } from "@/componentes/ConteudoLaboratorioIndice";
+import { ConteudoLaboratorioCircuitBreaker } from "@/componentes/ConteudoLaboratorioCircuitBreaker";
 import { buscarLaboratorioPorId } from "@/lib/laboratorios";
 
 export async function generateMetadata({
@@ -92,6 +93,10 @@ export default async function PaginaLaboratorio({
 
         {laboratorio.status === "DISPONIVEL" && laboratorio.id === "query-sem-indice" && (
           <ConteudoLaboratorioIndice />
+        )}
+
+        {laboratorio.status === "DISPONIVEL" && laboratorio.id === "circuit-breaker" && (
+          <ConteudoLaboratorioCircuitBreaker />
         )}
       </main>
     </div>

@@ -20,6 +20,7 @@
 | — | Laboratório Connection Pool Exhaustion | **Concluída** (2026-08-23) | Primeiro item implementado do backlog pós-Fase 8 — `SPEC-LAB-CONN-POOL-001` |
 | — | Laboratório Deadlock | **Concluída** (2026-08-23) | Segundo item implementado do backlog pós-Fase 8 — `SPEC-LAB-DEADLOCK-001` |
 | — | Laboratório Query sem índice | **Concluída** (2026-08-23) | Terceiro item implementado do backlog pós-Fase 8 — `SPEC-LAB-INDICE-001` |
+| — | Laboratório Circuit Breaker | **Concluída** (2026-08-27) | Quarto item implementado do backlog pós-Fase 8 — `SPEC-LAB-CIRCUITBREAKER-001` |
 
 ## Backlog de laboratórios futuros
 
@@ -34,7 +35,7 @@ antes de implementação, conforme `docs/decisions/0003-ids-de-spec.md`:
 6. ~~Connection Pool Exhaustion~~ — implementado, ver `SPEC-LAB-CONN-POOL-001`
 7. Transactional Outbox (ver seção 27 do prompt mestre)
 8. Ordenação de eventos
-9. Circuit Breaker
+9. ~~Circuit Breaker~~ — implementado, ver `SPEC-LAB-CIRCUITBREAKER-001`
 10. Retry Storm
 11. Timeout Cascade
 12. Saga

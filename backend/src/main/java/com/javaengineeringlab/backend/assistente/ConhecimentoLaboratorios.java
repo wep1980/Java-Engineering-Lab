@@ -79,7 +79,21 @@ public class ConhecimentoLaboratorios {
                     PostgreSQL -- o tipo de nó (Node Type) e o tempo real (Actual Total \
                     Time) vêm do próprio banco, não são estimados nem medidos só do lado \
                     da aplicação. O índice é criado e removido de verdade (DROP INDEX / \
-                    CREATE INDEX) a cada execução -- não é uma segunda tabela pré-indexada."""
+                    CREATE INDEX) a cada execução -- não é uma segunda tabela pré-indexada.""",
+            "circuit-breaker", """
+                    Laboratório de Circuit Breaker: uma dependência externa simulada está \
+                    completamente fora do ar (toda chamada demora 300ms e falha). Sem \
+                    proteção, cada uma das 20 chamadas paga o custo total dessa latência \
+                    antes de falhar. Com um circuit breaker real (Resilience4j, janela \
+                    deslizante de 10 chamadas, mínimo de 5 antes de calcular a taxa, \
+                    limite de 50% de falha), as 5 primeiras chamadas ainda falham de \
+                    verdade -- é o preço de aprender que a dependência está fora do ar --, \
+                    mas depois disso o circuito abre (estado real OPEN) e as 15 chamadas \
+                    restantes são rejeitadas instantaneamente, sem sequer tentar a \
+                    dependência. O circuito é uma máquina de estados real (CLOSED -> OPEN \
+                    -> HALF_OPEN), não uma simulação -- o mesmo padrão usado em produção \
+                    para evitar que uma dependência instável derrube a própria aplicação \
+                    por exaustão de threads/conexões esperando por ela."""
     );
 
     public String buscar(String laboratorioId) {

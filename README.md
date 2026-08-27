@@ -53,6 +53,7 @@ introdução → arquitetura → executar problema → observar → diagnosticar
 | Connection Pool Exhaustion | **Disponível** — `/laboratorios/connection-pool-exhaustion`, 3 variantes com pools HikariCP isolados e concorrência real (`specs/labs/SPEC-LAB-CONN-POOL-001-connection-pool-exhaustion.md`) |
 | Deadlock | **Disponível** — `/laboratorios/deadlock`, 2 variantes com deadlock real detectado pelo PostgreSQL (`specs/labs/SPEC-LAB-DEADLOCK-001-deadlock.md`) |
 | Query sem índice | **Disponível** — `/laboratorios/query-sem-indice`, 2 variantes com EXPLAIN ANALYZE real do PostgreSQL (`specs/labs/SPEC-LAB-INDICE-001-query-sem-indice.md`) |
+| Circuit Breaker | **Disponível** — `/laboratorios/circuit-breaker`, 2 variantes com circuit breaker real (Resilience4j) contra uma dependência instável (`specs/labs/SPEC-LAB-CIRCUITBREAKER-001-circuit-breaker.md`) |
 | Demais laboratórios do backlog | Ver `docs/roadmap.md` |
 
 ## Stack
@@ -255,9 +256,25 @@ reais no caminho: `@Modifying` do Spring Data JPA exige contexto
 transacional; e o otimizador só escolheu consistentemente `Index Scan`
 depois de um `ANALYZE` real ser adicionado após semear/indexar os
 dados — sem isso, escolhia `Bitmap Heap Scan` por estatísticas
-desatualizadas. Os demais laboratórios futuros do backlog seguem
-pendentes de aprovação antes de começar (ver
-`docs/roadmap.md`).
+desatualizadas. Como quarto item do backlog, foi implementado o
+laboratório de Circuit Breaker (`SPEC-LAB-CIRCUITBREAKER-001`): uma
+dependência externa simulada sempre indisponível (300ms de latência
+real e falha garantida) chamada 20 vezes em sequência, comparando
+deixar cada chamada pagar o custo total da falha contra interrompê-las
+com um circuit breaker real (biblioteca Resilience4j, só o módulo
+núcleo, sem a autoconfiguração Spring Boot própria — risco de
+incompatibilidade com Spring Boot 4.1 pelo mesmo motivo já documentado
+na ADR-0009). Números reais medidos via `curl`: variante sem proteção
+→ 20 falhas reais, 6014ms; variante protegida → 5 falhas reais (o preço
+de aprender que a dependência caiu) e 15 chamadas rejeitadas
+instantaneamente pelo circuito já aberto, 1509ms — **~4× mais rápido**,
+com o estado real do circuito (`OPEN`) como evidência de que a proteção
+realmente agiu. Durante a validação, o Docker Desktop do ambiente ficou
+indisponível por um problema de disco cheio, não relacionado ao código
+deste laboratório — resolvido antes de concluir a validação completa
+(suíte, `curl` real contra o Docker Compose, Chrome). Os demais
+laboratórios futuros do backlog seguem pendentes de aprovação antes de
+começar (ver `docs/roadmap.md`).
 
 ## Licença
 

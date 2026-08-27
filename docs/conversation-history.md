@@ -2423,3 +2423,276 @@ Verifiquei o estado real do repositório: o laboratório de Query sem índice (�
 
 Como não há nada em andamento, tratei como continuação do mesmo padrão das interações anteriores (escolher o próximo item do backlog pós-Fase 8, mesmo critério de diversificação de portfólio e zero infraestrutura nova) — pergunta exploratória, resposta curta: recomendei "Circuit Breaker" como próximo candidato. Justificativa: os últimos três laboratórios implementados (Connection Pool Exhaustion, Deadlock, Query sem índice) e vários dos anteriores (N+1, Race Condition, Kafka/Idempotência) giram em torno de banco de dados/persistência; Circuit Breaker abre território novo (resiliência entre serviços) sem exigir infraestrutura adicional (basta um endpoint simulando uma dependência lenta/instável). Deixei claro que é sugestão a ser redirecionada — nenhuma implementação foi iniciada, aguardando aprovação.
 
+
+## Interação 2026-08-26 17:22:57
+
+### Usuário
+
+Circuit Breaker — pode começar
+
+### Claude
+
+Implementei por completo o laboratório de Circuit Breaker:
+`specs/labs/SPEC-LAB-CIRCUITBREAKER-001-circuit-breaker.md`, backend
+(pacote `laboratorios.circuitbreaker`) com uma dependência externa
+simulada sempre indisponível (`DependenciaExternaInstavel`, 300ms de
+latência real via `Thread.sleep` e falha real, mesma técnica já aceita
+em SPECs anteriores) e duas variantes — `sem-circuit-breaker` (chama a
+dependência direto, 20 chamadas sequenciais, todas pagando a latência
+completa) e `com-circuit-breaker` (mesma chamada decorada por um
+`CircuitBreaker` real do Resilience4j, biblioteca nova adicionada só no
+módulo núcleo `resilience4j-circuitbreaker`, sem o módulo de
+autoconfiguração Spring Boot — decisão registrada na SPEC pelo mesmo
+motivo de risco já documentado em ADR-0009 para o Spring Boot 4.1);
+endpoint `POST /api/laboratorios/circuit-breaker/execucoes/{variante}`;
+registro no catálogo e no conhecimento do Assistente de IA; frontend
+com painel de execução e página de conteúdo educacional.
+
+Testes automatizados reais (`ExecucaoCircuitBreakerServiceTest`,
+`ExecucaoCircuitBreakerControllerTest`, 4 testes, sem Testcontainers —
+este laboratório não usa nenhuma infraestrutura externa) confirmam os
+números exatos esperados: `sem-circuit-breaker` → 20 falhas reais, 0
+rejeições; `com-circuit-breaker` → exatamente 5 falhas reais, 15
+rejeições pelo circuito, estado final `OPEN` (real, do
+`CircuitBreaker.getState()`). `npm run lint`/`build` do frontend sem
+erros.
+
+**Bloqueio encontrado durante a validação final**: o Docker Desktop do
+ambiente ficou indisponível — `docker version`, `docker ps` e o
+`mvn -B verify` completo (que depende de Testcontainers para os
+laboratórios anteriores) travaram por mais de 20 minutos sem nenhum
+progresso, mesmo `docker version` (que não depende de container
+nenhum, só do daemon) não respondendo. Como o laboratório de Circuit
+Breaker não usa Docker/Testcontainers em nada, isso confirma que o
+travamento é do ambiente, não do código novo — encerrei o processo
+travado em vez de deixá-lo rodando indefinidamente. Marquei a SPEC, o
+roadmap e o testing-guide como "implementado, validação parcial", sem
+nenhum número fabricado nas seções pendentes (curl real, validação no
+Chrome, suíte completa, isolamento RNF-01) — tudo isso continua
+pendente até o Docker voltar. Não commitei ainda: vou esperar a
+confirmação/o ambiente ser restabelecido antes de marcar como
+concluído e enviar, seguindo o mesmo padrão de rigor de evidências dos
+laboratórios anteriores.
+
+
+## Interação 2026-08-27 08:22:40
+
+### Usuário
+
+tente novamente
+
+### Claude
+
+Testei `docker version --format '{{.Server.Version}}'` de novo —
+continuou travado sem resposta (encerrado após timeout). Verifiquei os
+processos do Docker Desktop (`tasklist`) e os PIDs de
+`com.docker.backend.exe`/`Docker Desktop.exe` são exatamente os mesmos
+de ontem, além de vários processos `docker.exe` órfãos (clientes de
+comandos travados de ontem que nunca retornaram) — evidência de que o
+Docker Desktop não chegou a ser reiniciado, então o daemon
+provavelmente segue no mesmo estado travado. Reportei isso ao usuário e
+pedi para reiniciar o Docker Desktop de fato (fechar completamente e
+abrir de novo, não só tentar um comando) antes de eu tentar de novo.
+
+
+## Interação 2026-08-27 08:25:10
+
+### Usuário
+
+verifique o que esta acontecendo com o docker
+
+### Claude
+
+Investiguei o travamento do Docker Desktop (fora do repositório, direto
+no ambiente Windows): `wsl --list --verbose` mostra a distro
+`docker-desktop` como "Running"; `Get-Process` mostra
+`com.docker.backend.exe` (PID 15736) com ~67.965s (~18,9h) de tempo de
+CPU acumulado — sinal forte de que está girando em loop/travado, não
+só lento; e o achado mais revelador: o drive `C:` está com apenas
+**3,3 GB livres** de ~476 GB (99% cheio). O disco virtual do Docker
+(`docker_data.vhdx`, 50,65 GB, expansível dinamicamente) provavelmente
+não consegue crescer nem gravar com o `C:` tão cheio, o que bate com o
+`com.docker.backend.exe` girando sem responder a nenhum comando
+(`docker version`, `docker ps`). Reportei o diagnóstico ao usuário —
+recomendei liberar espaço real em `C:` (a folga de 3,3 GB é insuficiente)
+e só depois reiniciar o Docker Desktop de fato — sem tomar nenhuma ação
+destrutiva (apagar arquivos, matar processos) sem autorização, por ser
+fora do escopo do repositório.
+
+
+## Interação 2026-08-27 08:28:40
+
+### Usuário
+
+ajuda a identificar o que está ocupando espaço em C:
+
+### Claude
+
+Escaneei `C:` em etapas (raiz, depois `C:\Users\wep`, depois
+`AppData\Local`) via PowerShell para não travar num recursivo gigante.
+Achados: `C:\Users\wep` concentra 280 GB do total; dentro dele,
+`AppData\Local\Docker` (50,85 GB, o próprio disco do Docker),
+`AppData\Local\Packages\...Ubuntu22.04LTS` (36,73 GB, a distro WSL),
+`Pictures` (29 GB), `Downloads` (23 GB), `Documents` (15,57 GB),
+`AppData\Local\Packages\Claude_...` (11,12 GB), `.android` (10,92 GB),
+`.m2` (9,26 GB), `.ollama` (4,87 GB), `.cache` (4,83 GB), `npm-cache`
+(3,81 GB), `JetBrains` (3,27 GB). Não apaguei nem alterei nada — é
+dado pessoal do usuário fora do escopo do repositório. Sugeri, em
+ordem de risco crescente: esvaziar a Lixeira do Windows (apareceu
+0,00 GB no scan, provavelmente por permissão), `npm cache clean
+--force` (seguro, ofereci rodar), revisar `Downloads` manualmente, e
+`docker system prune -a --volumes` depois que o Docker voltar a
+responder.
+
+
+## Interação 2026-08-27 09:13:21
+
+### Usuário
+
+Sua distro WSL Ubuntu — ambiente Linux em uso, esta sendo usado por alguma coisa, processo, etc.. ?
+
+### Claude
+
+Rodei `ps aux`, `uptime` e `who` dentro da distro `Ubuntu-22.04` via
+`wsl -d`. Achados: distro no ar há 6 dias e 21 horas, `load average:
+0.00, 0.00, 0.00` (ociosa em CPU agora); duas sessões de terminal
+(`bash`) abertas e esquecidas desde 20/08 11:41 (usuários `wepdev` e
+`root`); processos normais de systemd; e um processo
+`docker-desktop-user-distro proxy`, confirmando que essa distro tem a
+integração WSL do Docker Desktop habilitada (é a distro padrão). Não é
+ela a causa do travamento do Docker — está ociosa; o suspeito
+continua sendo o `C:` quase cheio. Ofereci encerrar as duas sessões de
+terminal zumbis (reversível, baixo risco) ou investigar antes o que
+eram.
+
+
+## Interação 2026-08-27 09:15:39
+
+### Usuário
+
+eu quero saber se podemos retirar esse wsl do pc , sem causar nenhum problema
+
+### Claude
+
+Investiguei antes de responder, dado que `wsl --unregister` é
+irreversível (apaga o disco virtual na hora, sem lixeira). Distingui
+duas perguntas: (1) remover o WSL inteiro — **não**, confirmado via
+`C:\Users\wep\AppData\Roaming\Docker\settings-store.json`
+(`WslEngineEnabled: true`, `UseWindowsContainers: false`): o Docker
+Desktop roda sobre o backend WSL2 nessa máquina, não é opcional.
+(2) remover só a distro `Ubuntu-22.04` — possível, mas com um risco
+real: inspecionei `/home/wepdev` (23 GB) via `wsl -d ... du -sh` e
+achei que a maior parte (`.cache` 9 GB, `venv_whisperx` 6,3 GB,
+`venv_dub` 5,7 GB, `.local` 1,9 GB) é regenerável, mas 6 scripts
+pequenos (`dublar_lote.sh`, `mesclar_video.py`,
+`transcrever_traduzir.py`, `sintetizar_tts.py`, `tts_sintetizar.py`,
+`requirements-pinned.txt`, um pipeline de dublagem/transcrição/TTS)
+não têm `.git` nem backup em nenhum outro lugar — seriam perdidos de
+vez. Achei também uma segunda distro `Ubuntu` (parada, não-padrão,
+4,22 GB) ainda não inspecionada. Removendo `Ubuntu-22.04` libera
+~36,7 GB, resolvendo o aperto de espaço. Propus fazer o backup dos
+scripts antes de qualquer remoção, e esperei confirmação explícita do
+usuário antes de agir.
+
+
+## Interação 2026-08-27 09:19:21
+
+### Usuário
+
+faça isso
+
+### Claude
+
+Copiei (via `\\wsl.localhost\Ubuntu-22.04\home\wepdev`, fora do
+repositório) os 6 scripts não versionados (`dublar_lote.sh`,
+`mesclar_video.py`, `transcrever_traduzir.py`, `sintetizar_tts.py`,
+`tts_sintetizar.py`, `requirements-pinned.txt`, mais os `.bak`) e a
+pasta `.dubwork` (arquivos de trabalho do pipeline de dublagem, com
+áudios `.wav`) para `C:\Users\wep\Documents\backup-wsl-ubuntu22.04\` —
+127,81 MB no total. Conferi item a item contra o que existe dentro da
+distro: tudo bate, nada ficou de fora. Ainda não removi a distro —
+pedi confirmação explícita do usuário antes de rodar
+`wsl --unregister Ubuntu-22.04` (ação irreversível).
+
+
+## Interação 2026-08-27 09:23:35
+
+### Usuário
+
+SE NAO FOR PREJUDICAR O FUNCIONAMENTO DE NADA QUE DEPENDA DO WSL, PODE APAGAR
+
+### Claude
+
+Antes de apagar, fiz uma última checagem: nenhum processo Windows
+(`wslhost.exe`) mostrou vínculo específico com a distro além do normal
+do WSL2, e não havia `.vscode-server` instalado nela (sem integração
+VS Code Remote-WSL). Com isso e o backup já feito, rodei
+`wsl --unregister Ubuntu-22.04` — concluído com sucesso. A distro
+`docker-desktop` (motor do Docker) continua no ar, intacta, confirmando
+que a remoção não afetou o Docker em si. Espaço livre em `C:` saltou
+de 3,3 GB para **92,16 GB** (bem mais que os ~36,7 GB estimados).
+Tentei `docker version` de novo — ainda travou, o que já era esperado:
+liberar espaço em disco não destrava sozinho um processo que já estava
+girando/travado antes da correção; falta reiniciar o Docker Desktop de
+fato agora que a causa raiz (disco cheio) foi removida. Pedi ao usuário
+para reiniciar o Docker Desktop nesse momento.
+
+
+## Interação 2026-08-27 09:26:13
+
+### Usuário
+
+reiniciei o docker, pode continuar
+
+### Claude
+
+Testei `docker version` de novo — travou outra vez. Chequei o processo
+`com.docker.backend.exe` (PID 15736) via `Get-Process`:
+`StartTime: 20/08/2026 11:41:15`, o mesmo processo de uma semana atrás,
+nunca substituído, e `CPUsec` seguia subindo (67.965s → 68.692s) —
+ainda girando. Concluí que o restart do usuário reabriu a janela do
+Docker Desktop, mas não conseguiu encerrar o motor travado (processo
+travado demais para responder a um encerramento normal). Reportei isso
+e pedi confirmação para encerrar o processo à força.
+
+
+## Interação 2026-08-27 09:28:03
+
+### Usuário
+
+pode encerrar
+
+### Claude
+
+Encerrei à força (`Stop-Process -Force`) todos os processos do Docker
+Desktop (`com.docker.backend.exe` ×2 — incluindo o PID 15736 travado
+desde 20/08 —, `com.docker.build.exe`, `com.docker.dev-envs.exe`,
+`Docker Desktop.exe` ×3) e os clientes `docker.exe` órfãos. Relancei o
+Docker Desktop (`Start-Process`) e deixei um loop em segundo plano
+esperando `docker version` responder — respondeu (versão 28.0.4),
+motor novo e saudável.
+
+Com o Docker de volta, retomei e concluí a validação completa do
+laboratório de Circuit Breaker: `mvn -B verify` completo do backend —
+**41/41 testes passando**, sem regressão (corrigi de propósito o número
+errado que eu tinha calculado antes, 43 — a conta certa é 37 + 4 = 41).
+Subi `docker compose --profile core up -d`; achei que a porta 3000
+estava ocupada por um processo `node` de outro projeto do usuário
+(`wepdev-portfolio`, rodando desde 24/08, sem nenhuma relação com este
+repositório) — não mexi nele, só subi o frontend deste projeto numa
+porta livre (3002) via override `PORTA_FRONTEND`. `curl` real das duas
+variantes: `sem-circuit-breaker` → 20 falhas reais, 0 rejeições,
+6014ms; `com-circuit-breaker` → 5 falhas reais, 15 rejeições, estado
+`OPEN`, 1509ms (~4× mais rápido, batendo com a estimativa da SPEC).
+Variante inválida → 400. Isolamento (RNF-01): `sem-circuit-breaker`
+disparado em paralelo com o laboratório de N+1, que respondeu
+normalmente em 59ms. Validação visual real no Chrome em
+`/laboratorios/circuit-breaker`: as duas variantes clicadas, mostrando
+os mesmos números reais, com as cores corretas. Encerrei o Docker
+Compose de forma limpa (`docker compose --profile core down`).
+
+Atualizei toda a documentação com os números reais (SPEC com evidências
+e critérios de aceite marcados, roadmap, links, testing-guide, README)
+e revisei `git status` antes de commitar — nenhum arquivo inesperado,
+nada sensível.
+
