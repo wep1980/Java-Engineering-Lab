@@ -14,6 +14,7 @@ import { ConteudoLaboratorioOrdenacao } from "@/componentes/ConteudoLaboratorioO
 import { ConteudoLaboratorioMemoria } from "@/componentes/ConteudoLaboratorioMemoria";
 import { ConteudoLaboratorioThreadPool } from "@/componentes/ConteudoLaboratorioThreadPool";
 import { ConteudoLaboratorioSaga } from "@/componentes/ConteudoLaboratorioSaga";
+import { ConteudoLaboratorioCacheStampede } from "@/componentes/ConteudoLaboratorioCacheStampede";
 import { buscarLaboratorioPorId } from "@/lib/laboratorios";
 
 export async function generateMetadata({
@@ -122,6 +123,10 @@ export default async function PaginaLaboratorio({
 
         {laboratorio.status === "DISPONIVEL" && laboratorio.id === "saga" && (
           <ConteudoLaboratorioSaga />
+        )}
+
+        {laboratorio.status === "DISPONIVEL" && laboratorio.id === "cache-stampede" && (
+          <ConteudoLaboratorioCacheStampede />
         )}
       </main>
     </div>

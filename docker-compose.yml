@@ -45,6 +45,12 @@ services:
       # 503 (ver LaboratorioIndisponivelException), o resto do backend
       # continua funcionando normalmente.
       OLLAMA_URL: http://ollama:11434
+      # Idem para o profile "cache" — o cliente Redis (Lettuce) conecta
+      # de forma preguiçosa/assíncrona, então sem Redis no ar o backend
+      # sobe normalmente; só o laboratório de Cache Stampede fica
+      # indisponível (503) até o profile subir.
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     ports:
       - "${PORTA_BACKEND:-8080}:8080"
     depends_on:
@@ -149,6 +155,13 @@ services:
         echo "Baixando o modelo ${OLLAMA_MODELO:-llama3.2:3b}...";
         curl -sf http://ollama:11434/api/pull -d "{\"model\":\"${OLLAMA_MODELO:-llama3.2:3b}\"}";
         echo "Modelo pronto.";
+
+  # ---------- profile: cache ----------
+  redis:
+    image: redis:7-alpine
+    profiles: ["cache", "full"]
+    ports:
+      - "${PORTA_REDIS:-6379}:6379"
 
   # ---------- profile: quality ----------
   sonarqube:

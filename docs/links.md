@@ -45,6 +45,8 @@ Subindo com `docker compose --profile core up --build` (após copiar
 | Execução do laboratório Thread Pool Exhaustion (API) | `POST http://localhost:8080/api/laboratorios/thread-pool-exhaustion/execucoes/{variante}` | `variante`: `fila-ilimitada`, `fila-limitada` — validado, `origemDados: REAL` |
 | Laboratório de Saga (frontend) | http://localhost:3000/laboratorios/saga | Validado no navegador (2026-08-27) — 2 variantes, nenhuma infraestrutura extra (só o profile `core`) |
 | Execução do laboratório Saga (API) | `POST http://localhost:8080/api/laboratorios/saga/execucoes/{variante}` | `variante`: `sem-compensacao`, `com-compensacao` — validado, `origemDados: REAL` |
+| Laboratório de Cache Stampede (frontend) | http://localhost:3000/laboratorios/cache-stampede | Validado no navegador (2026-08-27) — 2 variantes, exige perfil `cache` (Redis real) |
+| Execução do laboratório Cache Stampede (API) | `POST http://localhost:8080/api/laboratorios/cache-stampede/execucoes/{variante}` | `variante`: `sem-protecao`, `com-protecao` — validado, `origemDados: REAL` |
 | Health-check do backend | http://localhost:8080/actuator/health | Validado retornando `{"status":"UP"}` |
 | Swagger UI | http://localhost:8080/swagger-ui/index.html | Validado retornando `200` |
 | OpenAPI (JSON) | http://localhost:8080/v3/api-docs | Validado retornando `200` |

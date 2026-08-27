@@ -59,6 +59,7 @@ introdução → arquitetura → executar problema → observar → diagnosticar
 | Memory Leak / OutOfMemoryError | **Disponível** — `/laboratorios/memory-leak`, 2 variantes com heap e GC reais da JVM (`specs/labs/SPEC-LAB-MEMLEAK-001-memory-leak.md`) |
 | Thread Pool Exhaustion | **Disponível** — `/laboratorios/thread-pool-exhaustion`, 2 variantes com `ThreadPoolExecutor` real (`specs/labs/SPEC-LAB-THREADPOOL-001-thread-pool-exhaustion.md`) |
 | Saga | **Disponível** — `/laboratorios/saga`, 2 variantes com ações de compensação reais (`specs/labs/SPEC-LAB-SAGA-001-saga.md`) |
+| Cache Stampede | **Disponível** — `/laboratorios/cache-stampede`, 2 variantes com lock distribuído real no Redis (`specs/labs/SPEC-LAB-CACHESTAMPEDE-001-cache-stampede.md`) |
 | Demais laboratórios do backlog | Ver `docs/roadmap.md` |
 
 ## Stack
@@ -375,8 +376,30 @@ demonstrado a fundo em três laboratórios anteriores, e a lição central
 medidos via `curl` (4 execuções de cada variante, 100% consistente):
 `sem-compensacao` → `estoqueConsistente: false` sempre;
 `com-compensacao` → `estoqueConsistente: true` sempre. 61/61 testes do
-backend passando. Os demais laboratórios futuros do backlog seguem
-pendentes de aprovação antes de começar (ver `docs/roadmap.md`).
+backend passando. Como décimo item do backlog, foi implementado o
+laboratório de Cache Stampede (`SPEC-LAB-CACHESTAMPEDE-001`) — a
+primeira infraestrutura nova (Redis, profile `cache`) desde a Fase 8,
+com aprovação explícita do usuário para abrir mão do critério de zero
+infraestrutura nova mantido nos nove laboratórios anteriores. Quando
+uma chave de cache fica fria, 10 requisições concorrentes que pedem a
+mesma chave encontram cache miss ao mesmo tempo; a variante
+`sem-protecao` deixa todas chamarem o recurso lento diretamente; a
+variante `com-protecao` faz as 10 disputarem um lock distribuído real
+no Redis (`SET chave valor NX PX`, atômico) — só a vencedora chama o
+recurso lento, as demais aguardam o cache ser populado. Números reais
+medidos via `curl` (3 execuções de cada variante, 100% determinístico):
+`sem-protecao` → `quantidadeAcessosAoRecursoLentoReal: 10` sempre;
+`com-protecao` → `quantidadeAcessosAoRecursoLentoReal: 1` sempre.
+Achado real no caminho: adicionar o starter do Redis registra
+automaticamente um health indicator que arrasta o `/actuator/health`
+agregado inteiro para `DOWN` sempre que o profile `cache` não está no
+ar, mesmo com o resto da aplicação saudável — corrigido com
+`management.health.redis.enabled: false`, para que a indisponibilidade
+do Redis seja sinalizada só no endpoint do próprio laboratório
+(503/`LaboratorioIndisponivelException`), não no health check
+compartilhado por toda a plataforma. 65/65 testes do backend passando.
+Os demais laboratórios futuros do backlog seguem pendentes de
+aprovação antes de começar (ver `docs/roadmap.md`).
 
 ## Licença
 

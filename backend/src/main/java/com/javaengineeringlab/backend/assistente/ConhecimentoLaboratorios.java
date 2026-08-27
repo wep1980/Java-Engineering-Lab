@@ -177,7 +177,22 @@ public class ConhecimentoLaboratorios {
                     implementação é orquestrada (chamada direta de método), não coreografada \
                     via Kafka -- decisão deliberada de simplicidade, já que a lição central \
                     (ação de compensação explícita) não depende de mensageria, e Kafka já foi \
-                    demonstrado a fundo em três laboratórios anteriores.""")
+                    demonstrado a fundo em três laboratórios anteriores."""),
+            Map.entry("cache-stampede", """
+                    Laboratório de Cache Stampede: quando uma chave de cache expira ou está \
+                    fria, e várias requisições chegam ao mesmo tempo pedindo a mesma chave, \
+                    TODAS encontram cache miss simultaneamente e vão direto para o recurso \
+                    lento por trás do cache (banco, API externa, cálculo caro) -- o mesmo \
+                    recurso que o cache existia para proteger. Primeiro laboratório a \
+                    introduzir infraestrutura nova desde a Fase 8 (Redis, perfil próprio \
+                    'cache', separado de 'core' -- os demais laboratórios continuam \
+                    funcionando sem ele). A variante sem-protecao deixa as 10 requisições \
+                    concorrentes acessarem o recurso lento (500ms simulado) ao mesmo tempo -- \
+                    10 acessos reais. A variante com-protecao usa um lock distribuído REAL no \
+                    Redis (SET chave valor NX PX -- operação atômica real, não simulada em \
+                    memória) -- só quem consegue o lock acessa o recurso lento; as demais \
+                    aguardam o cache ser populado pela vencedora -- 1 acesso real, sempre \
+                    (SETNX é atômico, garante exatamente um vencedor).""")
     );
 
     public String buscar(String laboratorioId) {

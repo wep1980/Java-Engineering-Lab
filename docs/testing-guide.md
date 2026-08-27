@@ -444,6 +444,28 @@ Validações executadas:
 - **Isolamento validado**: uma execução de `sem-compensacao` disparada em paralelo com uma execução do laboratório de N+1, que respondeu normalmente em 60ms.
 - Painel interativo em `/laboratorios/saga` validado no Chrome: as duas variantes disparam execuções reais, com "Estoque consistente" em vermelho para `sem-compensacao` (Não) e verde para `com-compensacao` (Sim).
 
+## Validação do laboratório de Cache Stampede (2026-08-27)
+
+Primeira infraestrutura nova desde a Fase 8 (Redis, profile `cache`,
+separado de `core`) — usuário aprovou explicitamente abrir mão do
+critério de zero infraestrutura nova mantido nos 9 laboratórios
+anteriores.
+
+| Endpoint | Método | Cenário | Resultado real observado |
+|---|---|---|---|
+| `/api/laboratorios/cache-stampede/execucoes/sem-protecao` | POST | 10 requisições concorrentes, chave de cache fria, sem coordenação | `200`, `quantidadeAcessosAoRecursoLentoReal: 10` (3/3 execuções) |
+| `/api/laboratorios/cache-stampede/execucoes/com-protecao` | POST | As mesmas 10 requisições disputando um lock distribuído real no Redis (`SETNX`) | `200`, `quantidadeAcessosAoRecursoLentoReal: 1` (3/3 execuções) |
+| `/api/laboratorios/cache-stampede/execucoes/sem-protecao` (sem o profile `cache` no ar) | POST | Redis indisponível | `503`, `LaboratorioIndisponivelException` ("Redis indisponível...") |
+| `/api/laboratorios/cache-stampede/execucoes/inexistente` | POST | Variante inválida | `400`, formato de erro padrão |
+
+Validações executadas:
+- Testes automatizados reais com Testcontainers (PostgreSQL real + Redis real): `ExecucaoCacheStampedeServiceIntegrationTest` (2 testes) e `ExecucaoCacheStampedeControllerTest` (2 testes), todos passando. Suíte completa do backend: **65/65 testes**.
+- `npm run lint` e `npm run build` do frontend sem erros.
+- Os 2 cenários válidos validados manualmente com `curl` contra o Docker Compose real (`--profile core --profile cache`), repetido 3× de cada variante — 100% determinístico nas 6 execuções.
+- **`docker compose --profile core up` (sem `cache`) validado sem regressão**: `/actuator/health` responde `200`/`UP`, `n1-queries` continua respondendo normalmente, e `cache-stampede/sem-protecao` responde `503` de forma controlada. Achado real durante essa validação: adicionar o starter do Redis registra um health indicator que, por padrão, arrasta o `/actuator/health` agregado inteiro para `DOWN` quando o Redis está inalcançável — corrigido com `management.health.redis.enabled: false` (ver `SPEC-LAB-CACHESTAMPEDE-001`, seção "Achados reais").
+- **Isolamento validado**: uma execução de `sem-protecao` disparada em paralelo com uma execução do laboratório de N+1 — ambas responderam corretamente, e uma execução de N+1 logo depois seguiu normal.
+- Painel interativo em `/laboratorios/cache-stampede` validado no Chrome: as duas variantes disparam execuções reais, com "Acessos ao recurso lento (REAL)" em vermelho (10) para `sem-protecao` e verde (1) para `com-protecao`.
+
 ## Preenchimento futuro (por fase)
 
 - **Fase 2/3**: pré-requisitos de ambiente, ordem de subida dos serviços

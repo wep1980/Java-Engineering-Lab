@@ -3061,3 +3061,94 @@ o critério de zero infra que guiou as recomendações anteriores.
 Apresentei como uma escolha real, não uma recomendação única. Nenhuma
 implementação foi iniciada.
 
+
+## Interação 2026-08-27 16:50:45
+
+### Usuário
+
+Cache inconsistente/Cache Stampede — pode abrir mão do zero infra
+
+### Claude
+
+Implementei o laboratório de **Cache Stampede** (não "Cache
+inconsistente" — escopei deliberadamente como itens separados do
+backlog, causas raiz diferentes: coordenação de recálculo concorrente
+vs. invalidação/atualização do cache). Primeira infraestrutura nova
+(Redis, profile `cache` próprio em `docker-compose.yml`, separado de
+`core`) desde a Fase 8, a partir da aprovação explícita do usuário
+para abrir mão do critério de zero infraestrutura nova mantido nos
+nove laboratórios anteriores.
+
+SPEC criada em `specs/labs/SPEC-LAB-CACHESTAMPEDE-001-cache-stampede.md`.
+Domínio: cada execução usa uma chave `UUID` nova (cache frio real, sem
+depender de TTL); 10 requisições concorrentes (barreira de largada)
+pedem a mesma chave; por trás do cache, um recurso lento simulado
+(`Thread.sleep`, 500ms). Variante `sem-protecao`: cada requisição, ao
+encontrar cache frio, chama o recurso lento diretamente e grava o
+resultado — sem coordenação, as 10 acessam o recurso lento. Variante
+`com-protecao`: cada requisição disputa um lock distribuído real no
+Redis (`ValueOperations.setIfAbsent` → `SET chave valor NX PX`,
+atômico); só a vencedora chama o recurso lento e povoa o cache; as
+demais aguardam (poll limitado) o cache ser populado, sem acessar o
+recurso lento.
+
+Testes automatizados reais com Testcontainers (PostgreSQL real + Redis
+real via `GenericContainer`): `ExecucaoCacheStampedeServiceIntegrationTest`
+(2 testes) e `ExecucaoCacheStampedeControllerTest` (2 testes), todos
+passando. Suíte completa do backend: 65/65 testes (61 anteriores + 4
+novos), sem regressão. `npm run lint`/`npm run build` do frontend sem
+erros.
+
+Dois achados reais relevantes durante a implementação:
+1. **`@SpringBootTest` precisa de PostgreSQL real mesmo neste
+   laboratório** — a primeira versão do teste de integração só subia
+   um `GenericContainer` de Redis e falhou com
+   `BeanCreationException`/`Unable to determine Dialect without JDBC
+   metadata`, porque a aplicação inteira (JPA incluído) sobe em
+   qualquer `@SpringBootTest`, independente do que o laboratório
+   testado usa. Corrigido adicionando também um
+   `@Container @ServiceConnection PostgreSQLContainer`.
+2. **`spring-boot-starter-data-redis` derruba `/actuator/health`
+   inteiro quando o profile `cache` não está no ar** — ao validar que
+   `docker compose --profile core up` (sem Redis) continua funcionando
+   sem regressão, descobri que `/actuator/health` passou a responder
+   `503`/`DOWN`, mesmo com Postgres e todos os outros laboratórios
+   saudáveis. Causa: o Spring Boot Actuator registra automaticamente
+   um `DataRedisReactiveHealthIndicator` que participa do status
+   agregado por padrão assim que o starter do Redis entra no
+   classpath; como o host `redis` não resolve sem o profile `cache`,
+   esse indicador falha e arrasta o health check inteiro para `DOWN`.
+   Isso violaria a garantia de "sem regressão para os demais
+   laboratórios" na prática (o sinal de saúde compartilhado por toda a
+   plataforma ficaria `DOWN` por causa de uma infraestrutura opcional
+   de um único laboratório). Corrigido com
+   `management.health.redis.enabled: false` em `application.yml` — a
+   indisponibilidade do Redis continua sinalizada corretamente, mas no
+   lugar certo: a resposta 503/`LaboratorioIndisponivelException` do
+   próprio endpoint de cache-stampede, não no health check
+   compartilhado.
+
+Evidências reais coletadas contra o Docker Compose real (perfis
+`core` + `cache`; o frontend precisou subir na porta 3010 via
+`PORTA_FRONTEND`, porque a porta 3000 do host estava ocupada por um
+processo Node de outro projeto não relacionado, `wepdev-portfolio`, que
+não toquei): `curl` repetido 3× de cada variante — `sem-protecao` →
+sempre `quantidadeAcessosAoRecursoLentoReal: 10`; `com-protecao` →
+sempre `quantidadeAcessosAoRecursoLentoReal: 1`, 100% determinístico
+(o `SETNX` do Redis é atômico). Validado também `docker compose
+--profile core up` (sem `cache`) após o fix: `/actuator/health` volta
+a responder `200`/`UP`, `n1-queries` responde `200` normalmente, e
+`cache-stampede/sem-protecao` responde `503` com a mensagem esperada.
+Isolamento confirmado: `cache-stampede` disparado em paralelo com
+`n1-queries`, ambos responderam corretamente, e uma execução de N+1
+logo depois seguiu normal. Validação visual real no Chrome em
+`/laboratorios/cache-stampede`: as duas variantes executadas via
+clique real, "Acessos ao recurso lento (REAL)" em vermelho (10) para
+`sem-protecao` e verde (1) para `com-protecao`. Ambiente encerrado de
+forma limpa ao final.
+
+SPEC atualizada para "Implementada e validada", critérios de aceite
+marcados, seção de evidências e achados reais preenchidas.
+`docs/roadmap.md`, `docs/links.md`, `docs/testing-guide.md` e
+`README.md` atualizados seguindo o padrão dos laboratórios anteriores.
+

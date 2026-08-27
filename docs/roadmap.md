@@ -26,6 +26,7 @@
 | — | Laboratório Memory Leak / OutOfMemoryError | **Concluída** (2026-08-27) | Sétimo item implementado do backlog pós-Fase 8 — `SPEC-LAB-MEMLEAK-001` |
 | — | Laboratório Thread Pool Exhaustion | **Concluída** (2026-08-27) | Oitavo item implementado do backlog pós-Fase 8 — `SPEC-LAB-THREADPOOL-001` |
 | — | Laboratório Saga | **Concluída** (2026-08-27) | Nono item implementado do backlog pós-Fase 8 — `SPEC-LAB-SAGA-001` |
+| — | Laboratório Cache Stampede | **Concluída** (2026-08-27) | Décimo item implementado do backlog pós-Fase 8, primeira infraestrutura nova (Redis) desde a Fase 8 — `SPEC-LAB-CACHESTAMPEDE-001` |
 
 ## Backlog de laboratórios futuros
 
@@ -45,7 +46,7 @@ antes de implementação, conforme `docs/decisions/0003-ids-de-spec.md`:
 11. Timeout Cascade
 12. ~~Saga~~ — implementado, ver `SPEC-LAB-SAGA-001`
 13. Cache inconsistente
-14. Cache Stampede
+14. ~~Cache Stampede~~ — implementado, ver `SPEC-LAB-CACHESTAMPEDE-001`
 15. ~~Thread Pool Exhaustion~~ — implementado, ver `SPEC-LAB-THREADPOOL-001`
 16. ~~Memory Leak / OutOfMemoryError~~ — implementado, ver `SPEC-LAB-MEMLEAK-001`
 17. Paginação incorreta

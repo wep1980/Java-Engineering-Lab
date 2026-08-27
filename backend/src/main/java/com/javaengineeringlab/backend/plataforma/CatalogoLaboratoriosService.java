@@ -84,6 +84,12 @@ public class CatalogoLaboratoriosService {
                     "Saga",
                     "Demonstrar como uma falha no meio de uma transação de múltiplas etapas deixa o sistema inconsistente para sempre, e como o padrão Saga corrige isso com ações de compensação reais que desfazem etapas já concluídas.",
                     StatusLaboratorio.DISPONIVEL
+            ),
+            new LaboratorioResumo(
+                    "cache-stampede",
+                    "Cache Stampede",
+                    "Demonstrar como uma chave de cache fria faz múltiplas requisições concorrentes acertarem o recurso lento ao mesmo tempo, e como um lock distribuído real no Redis garante que só uma delas realmente recalcule.",
+                    StatusLaboratorio.DISPONIVEL
             )
     );
 
