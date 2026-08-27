@@ -406,6 +406,25 @@ Validações executadas:
 - **Isolamento validado**: uma execução de `com-vazamento` disparada em paralelo com uma execução do laboratório de N+1, que respondeu normalmente em 51ms.
 - Painel interativo em `/laboratorios/memory-leak` validado no Chrome: as duas variantes disparam execuções reais, com "Retido após GC real" e "Vazamento detectado" em vermelho para `com-vazamento` (19,9 MB / Sim) e verde para `sem-vazamento` (0,0 MB / Não).
 
+## Validação do laboratório de Thread Pool Exhaustion (2026-08-27)
+
+Nenhum pré-requisito de infraestrutura (não usa PostgreSQL, Kafka nem
+qualquer outro serviço do `docker-compose.yml` — só o profile `core`).
+
+| Endpoint | Método | Cenário | Resultado real observado |
+|---|---|---|---|
+| `/api/laboratorios/thread-pool-exhaustion/execucoes/fila-ilimitada` | POST | `Executors.newFixedThreadPool(2)`, 10 tarefas | `200`, `quantidadeAceitas: 10`, `quantidadeRejeitadas: 0`, `tempoMaximoEsperaNaFilaMs: 2008`, `duracaoMs: 2511` |
+| `/api/laboratorios/thread-pool-exhaustion/execucoes/fila-limitada` | POST | `ThreadPoolExecutor` com fila limitada (capacidade 2), as mesmas 10 tarefas | `200`, `quantidadeAceitas: 4`, `quantidadeRejeitadas: 6`, `tempoMaximoEsperaNaFilaMs: 503`, `duracaoMs: 1004` — ~2,5× mais rápido no total (4/4 execuções, 100% determinístico) |
+| `/api/laboratorios/thread-pool-exhaustion/execucoes/inexistente` | POST | Variante inválida | `400`, formato de erro padrão |
+
+Validações executadas:
+- Testes automatizados reais, sem Testcontainers (só `java.util.concurrent` real): `ExecucaoThreadPoolServiceTest` (2 testes) e `ExecucaoThreadPoolControllerTest` (2 testes), todos passando. Suíte completa do backend: **57/57 testes**.
+- `npm run lint` e `npm run build` do frontend sem erros.
+- Os 3 cenários validados manualmente com `curl` contra o Docker Compose real, repetido 4× para a variante `fila-limitada` — mesmos números em todas as execuções, 100% determinístico.
+- **Isolamento validado**: uma execução de `fila-ilimitada` (~2,5s) disparada em paralelo com uma execução do laboratório de N+1, que respondeu normalmente em 57ms.
+- Painel interativo em `/laboratorios/thread-pool-exhaustion` validado no Chrome: as duas variantes disparam execuções reais, com "Rejeitadas" em laranja quando `> 0` e "Maior espera na fila" em vermelho acima de 1s.
+- **Achado real durante a implementação**: `Map.of()` não aceita mais de 10 pares de chave/valor — adicionar este laboratório ao conhecimento do Assistente de IA foi a 11ª entrada, erro real de compilação, corrigido trocando para `Map.ofEntries(Map.entry(...), ...)` em todas as entradas existentes.
+
 ## Preenchimento futuro (por fase)
 
 - **Fase 2/3**: pré-requisitos de ambiente, ordem de subida dos serviços

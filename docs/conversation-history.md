@@ -2923,3 +2923,49 @@ esgotamento pode travar a aplicação inteira, não só os endpoints que
 tocam banco). Deixei claro que é uma sugestão a ser redirecionada —
 nenhuma implementação foi iniciada.
 
+
+## Interação 2026-08-27 13:06:43
+
+### Usuário
+
+Thread Pool Exhaustion — pode começar
+
+### Claude
+
+Escrevi `specs/labs/SPEC-LAB-THREADPOOL-001-thread-pool-exhaustion.md`
+e implementei por completo: backend (pacote `laboratorios.threadpool`)
+com dois `ExecutorService` dedicados, completamente isolados do pool
+de threads real do servidor de aplicação (mesmo princípio de
+`ExecucaoConnPoolService`) — `fila-ilimitada`
+(`Executors.newFixedThreadPool(2)`, que por dentro usa uma
+`LinkedBlockingQueue` sem limite de tamanho — o problema real e
+escondido que a maioria dos devs não percebe) e `fila-limitada`
+(`ThreadPoolExecutor` construído manualmente com fila limitada a 2 e
+política de rejeição padrão). Cada variante submete 10 tarefas de
+500ms; endpoint
+`POST /api/laboratorios/thread-pool-exhaustion/execucoes/{variante}`;
+registro no catálogo e no conhecimento do Assistente de IA; frontend
+com painel de execução e página de conteúdo educacional.
+
+**Achado real durante a implementação**: `Map.of()` não aceita mais de
+10 pares de chave/valor — adicionar este laboratório ao
+`ConhecimentoLaboratorios` foi a 11ª entrada, erro real de compilação
+(`no suitable method found for of(...)`). Corrigido trocando para
+`Map.ofEntries(Map.entry(...), ...)` em todas as 11 entradas
+existentes, sem limite de tamanho.
+
+Validação real completa: 57/57 testes do backend (4 novos: 2 de
+serviço, sem Testcontainers — só `java.util.concurrent` real —, 2 de
+controller); `npm run build`/`lint` sem erros; execução real via
+`curl` contra o Docker Compose: `fila-ilimitada` → 10 aceitas, 0
+rejeitadas, 2008ms de espera máxima na fila (bateu exatamente com a
+previsão teórica da SPEC, ~4×500ms), 2511ms no total;
+`fila-limitada` → 4 aceitas, 6 rejeitadas reais
+(`RejectedExecutionException`), 503ms de espera máxima, 1004ms no
+total — ~2,5× mais rápido, 100% determinístico em 4 execuções
+consecutivas; isolamento confirmado (N+1 respondeu em 57ms durante uma
+execução do pool esgotando); validação visual real no Chrome com as
+duas variantes clicadas. Atualizei toda a documentação (SPEC com
+evidências, roadmap, links, testing-guide, README) e vou revisar com
+git status/diff e commitar+enviar a seguir.
+

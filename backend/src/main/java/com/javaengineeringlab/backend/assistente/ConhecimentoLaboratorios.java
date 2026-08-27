@@ -13,8 +13,8 @@ import java.util.Map;
 @Component
 public class ConhecimentoLaboratorios {
 
-    private static final Map<String, String> CONHECIMENTO = Map.of(
-            "n1-queries", """
+    private static final Map<String, String> CONHECIMENTO = Map.ofEntries(
+            Map.entry("n1-queries", """
                     Laboratório de N+1 Queries: uma consulta inicial retorna N registros \
                     (Pedidos), e acessar uma associação lazy (itens) para cada um dispara \
                     uma consulta adicional por registro -- 1 + N consultas. Soluções: \
@@ -23,8 +23,8 @@ public class ConhecimentoLaboratorios {
                     mais declarativo), DTO Projection (paginação segura, mas não carrega \
                     a entidade completa). Trocar tudo para FetchType.EAGER NÃO é solução \
                     -- move o custo do N+1 para toda consulta que carregue a entidade, \
-                    mesmo quando os itens não são necessários.""",
-            "race-condition", """
+                    mesmo quando os itens não são necessários."""),
+            Map.entry("race-condition", """
                     Laboratório de Race Condition / Lost Update: duas requisições \
                     concorrentes leem o mesmo saldo, cada uma soma sobre o valor lido, e \
                     a segunda escrita sobrescreve a primeira -- uma atualização se perde \
@@ -33,8 +33,8 @@ public class ConhecimentoLaboratorios {
                     transação já alterou a linha, e quem chama decide re-tentar; bom para \
                     baixa/média contenção. Pessimistic Locking (SELECT ... FOR UPDATE) -- \
                     serializa o acesso concorrente, nunca perde nem gera conflito, mas é \
-                    mais lento sob alta concorrência.""",
-            "kafka-idempotencia", """
+                    mais lento sob alta concorrência."""),
+            Map.entry("kafka-idempotencia", """
                     Laboratório de Mensagem Duplicada / Idempotência: Kafka garante \
                     at-least-once delivery -- o mesmo evento pode ser entregue mais de uma \
                     vez ao consumidor, isso é comportamento normal, não um bug. O problema \
@@ -44,8 +44,8 @@ public class ConhecimentoLaboratorios {
                     aplicar o efeito. Diferença importante: semântica de entrega (quantas \
                     vezes o Kafka entrega) é diferente de processamento idempotente \
                     (detectar e ignorar repetição) que é diferente de efeito de negócio \
-                    (o que realmente aconteceu no domínio).""",
-            "connection-pool-exhaustion", """
+                    (o que realmente aconteceu no domínio)."""),
+            Map.entry("connection-pool-exhaustion", """
                     Laboratório de Connection Pool Exhaustion: a aplicação segura uma \
                     conexão de banco durante um trabalho lento que não precisava dela \
                     (ex.: chamada externa, processamento pesado) -- sob concorrência, o \
@@ -56,8 +56,8 @@ public class ConhecimentoLaboratorios {
                     tem limite). Correção que realmente escala: reduzir o tempo de \
                     retenção da conexão -- fazer o trabalho lento FORA do escopo em que a \
                     conexão está aberta. O laboratório prova isso mantendo o MESMO pool \
-                    pequeno e apenas reordenando quando a conexão é obtida.""",
-            "deadlock", """
+                    pequeno e apenas reordenando quando a conexão é obtida."""),
+            Map.entry("deadlock", """
                     Laboratório de Deadlock: duas transferências concorrentes entre as \
                     mesmas duas contas, em direções opostas, cada uma trava com sucesso \
                     uma conta e espera indefinidamente pela outra, que a outra \
@@ -68,8 +68,8 @@ public class ConhecimentoLaboratorios {
                     forma consistente (por ID da conta, independente da direção da \
                     transferência) -- elimina matematicamente a espera circular, porque as \
                     duas transferências concorrentes sempre disputam a mesma conta \
-                    primeiro, nunca em ordens opostas.""",
-            "query-sem-indice", """
+                    primeiro, nunca em ordens opostas."""),
+            Map.entry("query-sem-indice", """
                     Laboratório de Query sem índice: uma tabela com 200 mil linhas, sem \
                     índice na coluna usada no WHERE, força o PostgreSQL a fazer um Seq \
                     Scan (varre a tabela inteira) para encontrar uma única linha por \
@@ -79,8 +79,8 @@ public class ConhecimentoLaboratorios {
                     PostgreSQL -- o tipo de nó (Node Type) e o tempo real (Actual Total \
                     Time) vêm do próprio banco, não são estimados nem medidos só do lado \
                     da aplicação. O índice é criado e removido de verdade (DROP INDEX / \
-                    CREATE INDEX) a cada execução -- não é uma segunda tabela pré-indexada.""",
-            "circuit-breaker", """
+                    CREATE INDEX) a cada execução -- não é uma segunda tabela pré-indexada."""),
+            Map.entry("circuit-breaker", """
                     Laboratório de Circuit Breaker: uma dependência externa simulada está \
                     completamente fora do ar (toda chamada demora 300ms e falha). Sem \
                     proteção, cada uma das 20 chamadas paga o custo total dessa latência \
@@ -93,8 +93,8 @@ public class ConhecimentoLaboratorios {
                     dependência. O circuito é uma máquina de estados real (CLOSED -> OPEN \
                     -> HALF_OPEN), não uma simulação -- o mesmo padrão usado em produção \
                     para evitar que uma dependência instável derrube a própria aplicação \
-                    por exaustão de threads/conexões esperando por ela.""",
-            "transactional-outbox", """
+                    por exaustão de threads/conexões esperando por ela."""),
+            Map.entry("transactional-outbox", """
                     Laboratório de Transactional Outbox: salvar no banco e publicar um evento \
                     no Kafka são duas operações separadas contra dois sistemas diferentes, sem \
                     garantia atômica entre elas -- se o banco confirma e o Kafka falha, o dado \
@@ -107,8 +107,8 @@ public class ConhecimentoLaboratorios {
                     um relay real (@Scheduled, roda a cada 200ms, independente da requisição \
                     HTTP) publica os eventos pendentes no Kafka real e marca como publicado só \
                     após confirmação real de entrega. Se o Kafka estivesse fora do ar, o evento \
-                    simplesmente ficaria pendente no banco -- nunca é perdido, só adiado.""",
-            "ordenacao-de-eventos", """
+                    simplesmente ficaria pendente no banco -- nunca é perdido, só adiado."""),
+            Map.entry("ordenacao-de-eventos", """
                     Laboratório de Ordenação de Eventos: Kafka só garante ordem de entrega \
                     DENTRO de uma única partição -- um tópico com múltiplas partições (a \
                     forma como Kafka escala) não garante nenhuma ordem relativa entre eventos \
@@ -124,8 +124,8 @@ public class ConhecimentoLaboratorios {
                     então os 20 eventos ficam garantidamente numa única partição e chegam na \
                     ordem exata em que foram publicados. A lição: "Kafka preserva ordem" é \
                     uma meia-verdade -- depende inteiramente da chave de particionamento \
-                    escolhida.""",
-            "memory-leak", """
+                    escolhida."""),
+            Map.entry("memory-leak", """
                     Laboratório de Memory Leak: o padrão mais comum em aplicações Spring \
                     reais não é esquecer de fechar algum recurso -- é um bean singleton \
                     (escopo de vida da aplicação inteira, um GC root) guardando referências \
@@ -142,7 +142,25 @@ public class ConhecimentoLaboratorios {
                     todos os laboratórios), a demonstração nunca provoca um OutOfMemoryError \
                     de verdade -- mede a retenção real de heap em escala pequena e segura \
                     (~20MB por execução), suficiente para provar a causa raiz sem nenhum \
-                    risco à estabilidade do processo."""
+                    risco à estabilidade do processo."""),
+            Map.entry("thread-pool-exhaustion", """
+                    Laboratório de Thread Pool Exhaustion: Executors.newFixedThreadPool(n) é a \
+                    forma mais comum de criar um pool de threads em Java -- e esconde um \
+                    problema real: por dentro, usa uma LinkedBlockingQueue SEM LIMITE de \
+                    tamanho. Sob carga sustentada, a fila cresce indefinidamente sem nenhum \
+                    erro, nenhuma rejeição -- degradação silenciosa (tarefas esperando cada \
+                    vez mais tempo na fila), que em produção pode contribuir para um \
+                    OutOfMemoryError (mesmo sintoma final do laboratório de Memory Leak, \
+                    causado por um mecanismo completamente diferente: fila sem limite, não \
+                    referência forte). A variante fila-ilimitada usa exatamente esse padrão -- \
+                    10 tarefas, pool de 2 threads, todas aceitas, mas a última espera bastante \
+                    tempo real na fila antes de começar. A variante fila-limitada usa um \
+                    ThreadPoolExecutor construído manualmente com fila limitada (capacidade 2) \
+                    e política de rejeição padrão -- só 4 das 10 tarefas são aceitas (pool + \
+                    fila), as outras 6 são rejeitadas de verdade (RejectedExecutionException \
+                    real) na hora, em vez de silenciosamente enfileiradas. A lição: fila \
+                    limitada + rejeição falha rápido e de forma previsível; fila ilimitada \
+                    esconde a sobrecarga até virar um problema maior depois.""")
     );
 
     public String buscar(String laboratorioId) {

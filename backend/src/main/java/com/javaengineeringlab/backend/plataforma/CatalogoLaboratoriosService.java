@@ -72,6 +72,12 @@ public class CatalogoLaboratoriosService {
                     "Memory Leak / OutOfMemoryError",
                     "Demonstrar, com heap e coleta de lixo reais, como um bean singleton guardando referências fortes indefinidamente vaza memória, e como o tipo de referência correto (WeakHashMap) corrige isso sem nenhuma lógica de eviction escrita à mão.",
                     StatusLaboratorio.DISPONIVEL
+            ),
+            new LaboratorioResumo(
+                    "thread-pool-exhaustion",
+                    "Thread Pool Exhaustion",
+                    "Demonstrar como Executors.newFixedThreadPool esconde uma fila ilimitada por baixo, acumulando um backlog invisível sob carga sustentada, e como uma fila limitada com política de rejeição falha rápido e de forma previsível.",
+                    StatusLaboratorio.DISPONIVEL
             )
     );
 

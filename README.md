@@ -57,6 +57,7 @@ introdução → arquitetura → executar problema → observar → diagnosticar
 | Transactional Outbox | **Disponível** — `/laboratorios/transactional-outbox`, 2 variantes com Kafka real e relay assíncrono (`specs/labs/SPEC-LAB-OUTBOX-001-transactional-outbox.md`) |
 | Ordenação de Eventos | **Disponível** — `/laboratorios/ordenacao-de-eventos`, 2 variantes com tópico Kafka real de 3 partições (`specs/labs/SPEC-LAB-ORDEM-001-ordenacao-de-eventos.md`) |
 | Memory Leak / OutOfMemoryError | **Disponível** — `/laboratorios/memory-leak`, 2 variantes com heap e GC reais da JVM (`specs/labs/SPEC-LAB-MEMLEAK-001-memory-leak.md`) |
+| Thread Pool Exhaustion | **Disponível** — `/laboratorios/thread-pool-exhaustion`, 2 variantes com `ThreadPoolExecutor` real (`specs/labs/SPEC-LAB-THREADPOOL-001-thread-pool-exhaustion.md`) |
 | Demais laboratórios do backlog | Ver `docs/roadmap.md` |
 
 ## Stack
@@ -337,8 +338,28 @@ números reais: linha de base de heap medida antes de qualquer GC
 (mascarava o crescimento retido); e `WeakHashMap` não libera os
 valores sozinho — precisa de uma chamada real ao mapa para expurgar as
 entradas mortas antes de um segundo GC conseguir reclamar os valores
-de verdade. Os demais laboratórios futuros do backlog seguem
-pendentes de aprovação antes de começar (ver `docs/roadmap.md`).
+de verdade. Como oitavo item do backlog, foi implementado o
+laboratório de Thread Pool Exhaustion (`SPEC-LAB-THREADPOOL-001`):
+`Executors.newFixedThreadPool(n)`, a forma mais comum de criar um pool
+de threads em Java, esconde uma `LinkedBlockingQueue` sem limite de
+tamanho por dentro — sob carga sustentada, a fila cresce
+indefinidamente sem nenhum erro, nenhuma rejeição. A variante
+`fila-ilimitada` submete 10 tarefas a um pool de demonstração de 2
+threads (completamente isolado do pool de threads real do servidor);
+todas são aceitas, mas as últimas esperam bastante tempo real na fila.
+A variante `fila-limitada` usa um `ThreadPoolExecutor` com fila
+limitada e política de rejeição real — só 4 das 10 são aceitas, as
+outras 6 são rejeitadas de verdade (`RejectedExecutionException`) na
+hora. Números reais medidos via `curl` (4 execuções): `fila-ilimitada`
+→ 10 aceitas, 0 rejeitadas, 2008ms de espera máxima na fila, 2511ms no
+total; `fila-limitada` → 4 aceitas, 6 rejeitadas, 503ms de espera
+máxima, 1004ms no total — **~2,5× mais rápido**, 100% determinístico
+em todas as execuções. Achado real no caminho: `Map.of()` não aceita
+mais de 10 pares — adicionar este laboratório ao conhecimento do
+Assistente de IA foi a 11ª entrada, corrigido trocando para
+`Map.ofEntries(Map.entry(...), ...)`. Os demais laboratórios futuros
+do backlog seguem pendentes de aprovação antes de começar (ver
+`docs/roadmap.md`).
 
 ## Licença
 

@@ -12,6 +12,7 @@ import { ConteudoLaboratorioCircuitBreaker } from "@/componentes/ConteudoLaborat
 import { ConteudoLaboratorioOutbox } from "@/componentes/ConteudoLaboratorioOutbox";
 import { ConteudoLaboratorioOrdenacao } from "@/componentes/ConteudoLaboratorioOrdenacao";
 import { ConteudoLaboratorioMemoria } from "@/componentes/ConteudoLaboratorioMemoria";
+import { ConteudoLaboratorioThreadPool } from "@/componentes/ConteudoLaboratorioThreadPool";
 import { buscarLaboratorioPorId } from "@/lib/laboratorios";
 
 export async function generateMetadata({
@@ -112,6 +113,10 @@ export default async function PaginaLaboratorio({
 
         {laboratorio.status === "DISPONIVEL" && laboratorio.id === "memory-leak" && (
           <ConteudoLaboratorioMemoria />
+        )}
+
+        {laboratorio.status === "DISPONIVEL" && laboratorio.id === "thread-pool-exhaustion" && (
+          <ConteudoLaboratorioThreadPool />
         )}
       </main>
     </div>
