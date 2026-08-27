@@ -2753,3 +2753,23 @@ toda a documentação (SPEC com evidências, roadmap, links,
 testing-guide, README) e vou revisar com git status/diff e
 commitar+enviar a seguir.
 
+
+## Interação 2026-08-27 10:26:00
+
+### Usuário
+
+próximo item do backlog, mesmo critério
+
+### Claude
+
+Pergunta exploratória — recomendei "Ordenação de eventos", com o
+trade-off principal frente à alternativa mais próxima (Memory
+Leak/OutOfMemoryError — também zero infraestrutura nova, mas território
+de JVM/heap, uma guinada de tom maior; Ordenação de eventos continua a
+série de mensageria já construída — Idempotência → Outbox — e foi
+explicitamente adiada por nome na SPEC-LAB-KAFKA-IDEMP-001
+("ordenamento entre partições é assunto de laboratório futuro, fora de
+escopo aqui"), reaproveitando 100% da infraestrutura Kafka já
+existente). Deixei claro que é uma sugestão a ser redirecionada —
+nenhuma implementação foi iniciada.
+
