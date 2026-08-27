@@ -10,6 +10,7 @@ import { ConteudoLaboratorioDeadlock } from "@/componentes/ConteudoLaboratorioDe
 import { ConteudoLaboratorioIndice } from "@/componentes/ConteudoLaboratorioIndice";
 import { ConteudoLaboratorioCircuitBreaker } from "@/componentes/ConteudoLaboratorioCircuitBreaker";
 import { ConteudoLaboratorioOutbox } from "@/componentes/ConteudoLaboratorioOutbox";
+import { ConteudoLaboratorioOrdenacao } from "@/componentes/ConteudoLaboratorioOrdenacao";
 import { buscarLaboratorioPorId } from "@/lib/laboratorios";
 
 export async function generateMetadata({
@@ -102,6 +103,10 @@ export default async function PaginaLaboratorio({
 
         {laboratorio.status === "DISPONIVEL" && laboratorio.id === "transactional-outbox" && (
           <ConteudoLaboratorioOutbox />
+        )}
+
+        {laboratorio.status === "DISPONIVEL" && laboratorio.id === "ordenacao-de-eventos" && (
+          <ConteudoLaboratorioOrdenacao />
         )}
       </main>
     </div>

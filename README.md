@@ -55,6 +55,7 @@ introdução → arquitetura → executar problema → observar → diagnosticar
 | Query sem índice | **Disponível** — `/laboratorios/query-sem-indice`, 2 variantes com EXPLAIN ANALYZE real do PostgreSQL (`specs/labs/SPEC-LAB-INDICE-001-query-sem-indice.md`) |
 | Circuit Breaker | **Disponível** — `/laboratorios/circuit-breaker`, 2 variantes com circuit breaker real (Resilience4j) contra uma dependência instável (`specs/labs/SPEC-LAB-CIRCUITBREAKER-001-circuit-breaker.md`) |
 | Transactional Outbox | **Disponível** — `/laboratorios/transactional-outbox`, 2 variantes com Kafka real e relay assíncrono (`specs/labs/SPEC-LAB-OUTBOX-001-transactional-outbox.md`) |
+| Ordenação de Eventos | **Disponível** — `/laboratorios/ordenacao-de-eventos`, 2 variantes com tópico Kafka real de 3 partições (`specs/labs/SPEC-LAB-ORDEM-001-ordenacao-de-eventos.md`) |
 | Demais laboratórios do backlog | Ver `docs/roadmap.md` |
 
 ## Stack
@@ -292,9 +293,28 @@ laboratório de N+1 (corrigido renomeando para `PedidoOutbox`); bean
 (corrigido construindo-o diretamente); e o relay rodando em qualquer
 teste com contexto Spring completo poluiu a contagem global de queries
 do Hibernate usada pelo laboratório de N+1 em `mvn verify` — corrigido
-com uma flag de habilitação, desligada explicitamente nesse teste. Os
-demais laboratórios futuros do backlog seguem pendentes de aprovação
-antes de começar (ver `docs/roadmap.md`).
+com uma flag de habilitação, desligada explicitamente nesse teste. Como
+sexto item do backlog, foi implementado o laboratório de Ordenação de
+Eventos (`SPEC-LAB-ORDEM-001`): "Kafka preserva ordem" é uma
+meia-verdade — só é garantido dentro de uma única partição, não entre
+partições de um mesmo tópico. Um tópico real de 3 partições (criado
+explicitamente, já que o broker de demonstração usa 1 partição por
+padrão) recebe 20 eventos do mesmo agregado; a variante
+`sem-chave-particionamento` espalha os eventos pelas 3 partições
+(round-robin explícito, determinístico) e um consumidor real com 3
+threads (uma por partição) os recebe fora de ordem; a variante
+`com-chave-particionamento` usa o identificador do agregado como
+chave — o particionador padrão do Kafka garante que a mesma chave
+sempre cai na mesma partição, preservando a ordem exata. Números reais
+medidos via `curl`: `sem-chave-particionamento` → 3 partições usadas,
+ordem embaralhada (5/5 execuções); `com-chave-particionamento` → 1
+partição, ordem exata `[0..19]` (3/3 execuções). Achado real
+importante no caminho: a primeira versão bloqueava a cada publicação
+antes de enviar a próxima, serializando o envio inteiro e mascarando
+a demonstração (a variante "problemática" chegava sempre em ordem, por
+acidente) — corrigido disparando as 20 publicações antes de aguardar
+qualquer resultado. Os demais laboratórios futuros do backlog seguem
+pendentes de aprovação antes de começar (ver `docs/roadmap.md`).
 
 ## Licença
 

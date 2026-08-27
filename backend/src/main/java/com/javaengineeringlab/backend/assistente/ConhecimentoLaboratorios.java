@@ -107,7 +107,24 @@ public class ConhecimentoLaboratorios {
                     um relay real (@Scheduled, roda a cada 200ms, independente da requisição \
                     HTTP) publica os eventos pendentes no Kafka real e marca como publicado só \
                     após confirmação real de entrega. Se o Kafka estivesse fora do ar, o evento \
-                    simplesmente ficaria pendente no banco -- nunca é perdido, só adiado."""
+                    simplesmente ficaria pendente no banco -- nunca é perdido, só adiado.""",
+            "ordenacao-de-eventos", """
+                    Laboratório de Ordenação de Eventos: Kafka só garante ordem de entrega \
+                    DENTRO de uma única partição -- um tópico com múltiplas partições (a \
+                    forma como Kafka escala) não garante nenhuma ordem relativa entre eventos \
+                    em partições diferentes. Qual partição um evento cai é decidido pela \
+                    chave de particionamento usada ao publicar. A variante \
+                    sem-chave-particionamento espalha 20 eventos do mesmo agregado pelas 3 \
+                    partições reais de um tópico (round-robin explícito, mesmo efeito \
+                    estrutural de publicar sem chave consistente); consumidos por um \
+                    consumidor real com 3 threads (uma por partição), a ordem de chegada não \
+                    é garantida. A variante com-chave-particionamento publica os mesmos 20 \
+                    eventos usando o identificador do agregado como chave -- o particionador \
+                    padrão do Kafka garante que a mesma chave sempre cai na mesma partição, \
+                    então os 20 eventos ficam garantidamente numa única partição e chegam na \
+                    ordem exata em que foram publicados. A lição: "Kafka preserva ordem" é \
+                    uma meia-verdade -- depende inteiramente da chave de particionamento \
+                    escolhida."""
     );
 
     public String buscar(String laboratorioId) {

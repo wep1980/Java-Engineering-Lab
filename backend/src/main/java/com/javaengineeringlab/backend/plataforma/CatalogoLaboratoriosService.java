@@ -60,6 +60,12 @@ public class CatalogoLaboratoriosService {
                     "Transactional Outbox",
                     "Demonstrar a escrita dupla não-atômica entre banco e Kafka (o dado é salvo, mas a publicação do evento pode falhar e se perder para sempre) e como o padrão Transactional Outbox garante que o evento nunca se perde, só é adiado.",
                     StatusLaboratorio.DISPONIVEL
+            ),
+            new LaboratorioResumo(
+                    "ordenacao-de-eventos",
+                    "Ordenação de Eventos",
+                    "Demonstrar que Kafka só garante ordem dentro de uma partição, não entre partições, e como a chave de particionamento decide se os eventos de um mesmo agregado compartilham essa garantia.",
+                    StatusLaboratorio.DISPONIVEL
             )
     );
 

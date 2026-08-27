@@ -29,7 +29,7 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
-        spring.json.trusted.packages: com.javaengineeringlab.backend.laboratorios.kafka
+        spring.json.trusted.packages: com.javaengineeringlab.backend.laboratorios.kafka,com.javaengineeringlab.backend.laboratorios.ordenacao
         spring.json.value.default.type: com.javaengineeringlab.backend.laboratorios.kafka.EventoPagamentoConfirmado
 
 server:

@@ -2773,3 +2773,58 @@ escopo aqui"), reaproveitando 100% da infraestrutura Kafka já
 existente). Deixei claro que é uma sugestão a ser redirecionada —
 nenhuma implementação foi iniciada.
 
+
+## Interação 2026-08-27 10:52:20
+
+### Usuário
+
+Ordenação de eventos — pode começar
+
+### Claude
+
+Escrevi `specs/labs/SPEC-LAB-ORDEM-001-ordenacao-de-eventos.md` e
+implementei por completo: backend (pacote `laboratorios.ordenacao`)
+com um tópico Kafka real de 3 partições (`eventos-ordem`, criado
+explicitamente via `NewTopic`, já que o broker de demonstração cria
+tópicos automaticamente com 1 partição só), duas variantes — 20
+eventos publicados com partição escolhida por round-robin explícito e
+sem chave (`sem-chave-particionamento`) vs. os mesmos 20 eventos
+publicados com o `execucaoId` como chave consistente
+(`com-chave-particionamento`); um consumidor real
+(`@KafkaListener(concurrency = 3)`, uma thread por partição) registra
+a ordem exata em que os eventos chegam; endpoint
+`POST /api/laboratorios/ordenacao-de-eventos/execucoes/{variante}`;
+registro no catálogo e no conhecimento do Assistente de IA; frontend
+com painel de execução (mostrando a lista completa da ordem recebida)
+e página de conteúdo educacional.
+
+**O achado mais importante desta sessão**: a primeira versão bloqueava
+(`.get()`) logo após cada publicação, antes de enviar a próxima —
+serializando o envio inteiro e eliminando qualquer sobreposição real
+entre partições. Validei isso ao vivo contra o Docker Compose real: 6
+execuções manuais consecutivas da variante "problemática"
+(`sem-chave-particionamento`), TODAS com `ordemPreservada: true`,
+mesmo usando as 3 partições reais — a demonstração simplesmente não
+demonstrava o problema que deveria demonstrar. Corrigi disparando as
+20 publicações antes de aguardar qualquer resultado (refatorando
+`ProdutorEventoOrdem` para retornar `CompletableFuture` sem bloquear);
+depois da correção, 5/5 execuções manuais produziram ordem real e
+visivelmente embaralhada (ex.:
+`[0,1,2,4,3,5,6,8,9,12,11,7,15,14,18,10,17,13,16,19]`, com cada
+subsequência por partição permanecendo crescente entre si — a garantia
+por partição se confirma, só a ordem entre partições se perde).
+
+Validação real completa: 49/49 testes do backend (4 novos: 2 de
+controller, 2 de integração com Testcontainers Kafka real com 3
+partições reais), revalidada 2× (antes e depois da correção do achado
+de publicação bloqueante); `npm run build`/`lint` sem erros; execução
+real via `curl` contra o Docker Compose (perfis `core`+`messaging`):
+`com-chave-particionamento` → 3/3 com 1 partição, ordem exata `[0..19]`,
+~14-18ms; `sem-chave-particionamento` → 5/5 com 3 partições, ordem
+embaralhada; isolamento confirmado (N+1 respondeu em 129ms durante uma
+execução da ordenação); validação visual real no Chrome com as duas
+variantes clicadas, mostrando a lista completa da ordem recebida.
+Atualizei toda a documentação (SPEC com evidências, roadmap, links,
+testing-guide, README) e vou revisar com git status/diff e
+commitar+enviar a seguir.
+

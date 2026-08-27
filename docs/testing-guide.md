@@ -366,6 +366,26 @@ Validações executadas:
 - Painel interativo em `/laboratorios/transactional-outbox` validado no Chrome: as duas variantes disparam execuções reais, com "Inconsistente" em vermelho para `sem-outbox` e verde para `com-outbox`.
 - **Achado de infraestrutura durante a validação** (fora do escopo do código): a porta do frontend não aceitava conexões logo após subir o Compose, resquício do restart forçado do Docker feito mais cedo na sessão — resolvido com `docker restart` do container do frontend.
 
+## Validação do laboratório de Ordenação de Eventos (2026-08-27)
+
+Pré-requisito: backend rodando com o perfil `messaging` (Kafka real) —
+`docker compose --profile core --profile messaging up`. Tópico
+`eventos-ordem` criado automaticamente com 3 partições reais na subida.
+
+| Endpoint | Método | Cenário | Resultado real observado |
+|---|---|---|---|
+| `/api/laboratorios/ordenacao-de-eventos/execucoes/sem-chave-particionamento` | POST | 20 eventos, partição escolhida por round-robin, sem chave | `200`, `quantidadeParticoesUsadas: 3`, `ordemPreservada: false` (5/5 execuções manuais reais, ordem visivelmente embaralhada) |
+| `/api/laboratorios/ordenacao-de-eventos/execucoes/com-chave-particionamento` | POST | Os mesmos 20 eventos, `execucaoId` como chave | `200`, `quantidadeParticoesUsadas: 1`, `ordemPreservada: true`, `ordemRecebida` exatamente `[0..19]` (3/3 execuções) |
+| `/api/laboratorios/ordenacao-de-eventos/execucoes/inexistente` | POST | Variante inválida | `400`, formato de erro padrão |
+
+Validações executadas:
+- **Achado real durante a implementação, o mais importante desta sessão**: a primeira versão bloqueava (`.get()`) em cada publicação antes de enviar a próxima, serializando o envio inteiro — sem sobreposição real entre partições, a variante `sem-chave-particionamento` chegava sempre em ordem por acidente (confirmado ao vivo: 6/6 execuções manuais com `ordemPreservada: true`, mesmo usando as 3 partições reais). Corrigido disparando as 20 publicações antes de aguardar qualquer resultado — depois da correção, 5/5 execuções produziram ordem real e visivelmente embaralhada. Ver `SPEC-LAB-ORDEM-001` para os detalhes completos.
+- Testes automatizados reais com Testcontainers (Kafka real, 3 partições reais): `ExecucaoOrdenacaoServiceIntegrationTest` (2 testes) e `ExecucaoOrdenacaoControllerTest` (2 testes), todos passando. Suíte completa do backend: **49/49 testes**, revalidada 2× (antes e depois da correção do achado de publicação bloqueante).
+- `npm run lint` e `npm run build` do frontend sem erros.
+- Os 3 cenários validados manualmente com `curl` contra o Docker Compose real (perfis `core` + `messaging`) — números reais na tabela acima.
+- **Isolamento validado**: uma execução de `sem-chave-particionamento` disparada em paralelo com uma execução do laboratório de N+1, que respondeu normalmente em 129ms.
+- Painel interativo em `/laboratorios/ordenacao-de-eventos` validado no Chrome: as duas variantes disparam execuções reais, com "Partições usadas" e "Ordem preservada" em vermelho para `sem-chave-particionamento` e verde para `com-chave-particionamento`, com a lista completa da ordem recebida exibida.
+
 ## Preenchimento futuro (por fase)
 
 - **Fase 2/3**: pré-requisitos de ambiente, ordem de subida dos serviços
